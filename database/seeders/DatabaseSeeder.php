@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,83 +15,147 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // =============================================
-        // SEED ROLES
+        // SEED DEFAULT USERS
         // =============================================
-        $roles = [
-            ['id' => 1, 'name' => 'admin', 'display_name' => 'Admin Utama', 'description' => 'Pengelola utama sistem dengan akses penuh', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 2, 'name' => 'petugas_bpbd', 'display_name' => 'Petugas BPBD', 'description' => 'Petugas lapangan yang memverifikasi dan menindaklanjuti laporan', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 3, 'name' => 'operator', 'display_name' => 'Operator', 'description' => 'Pengelola konten dan data laporan', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 4, 'name' => 'viewer', 'display_name' => 'Viewer', 'description' => 'Hanya dapat melihat data tanpa hak kelola', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 5, 'name' => 'masyarakat', 'display_name' => 'Masyarakat', 'description' => 'Pengguna umum masyarakat Jember', 'created_at' => now(), 'updated_at' => now()],
-        ];
-        DB::table('roles')->insert($roles);
+        $superAdminId = Str::uuid()->toString();
+        $adminBmkgId = Str::uuid()->toString();
 
-        // =============================================
-        // SEED DEFAULT ADMIN
-        // =============================================
         DB::table('users')->insert([
-            'name' => 'Admin Jember Siaga',
-            'email' => 'admin@jembersiaga.go.id',
-            'phone' => '08123456789',
-            'role_id' => 1,
-            'status' => 'active',
-            'email_verified_at' => now(),
-            'password' => Hash::make('password'),
-            'created_at' => now(),
-            'updated_at' => now(),
+            [
+                'id' => $superAdminId,
+                'name' => 'Super Admin Jember Siaga',
+                'email' => 'admin@jembersiaga.go.id',
+                'role' => 'super_admin',
+                'is_active' => true,
+                'created_at' => now(),
+            ],
+            [
+                'id' => $adminBmkgId,
+                'name' => 'Admin BMKG Jember',
+                'email' => 'bmkg@jembersiaga.go.id',
+                'role' => 'admin_bmkg',
+                'is_active' => true,
+                'created_at' => now(),
+            ],
         ]);
 
-        // =============================================
-        // SEED KATEGORI BENCANA
-        // =============================================
-        $categories = [
-            ['name' => 'Banjir', 'slug' => 'banjir', 'icon' => '🌊', 'color' => '#3B82F6', 'description' => 'Bencana banjir akibat luapan air', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Tanah Longsor', 'slug' => 'longsor', 'icon' => '⛰️', 'color' => '#8B5CF6', 'description' => 'Bencana tanah longsor', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Pohon Tumbang', 'slug' => 'pohon-tumbang', 'icon' => '🌳', 'color' => '#10B981', 'description' => 'Kejadian pohon tumbang', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Kebakaran', 'slug' => 'kebakaran', 'icon' => '🔥', 'color' => '#EF4444', 'description' => 'Bencana kebakaran', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Angin Puting Beliung', 'slug' => 'puting-beliung', 'icon' => '🌪️', 'color' => '#6366F1', 'description' => 'Bencana angin puting beliung', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Gempa Bumi', 'slug' => 'gempa', 'icon' => '🌍', 'color' => '#F59E0B', 'description' => 'Bencana gempa bumi', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Kekeringan', 'slug' => 'kekeringan', 'icon' => '☀️', 'color' => '#F97316', 'description' => 'Bencana kekeringan', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Lainnya', 'slug' => 'lainnya', 'icon' => '⚠️', 'color' => '#64748B', 'description' => 'Bencana atau kejadian lainnya', 'created_at' => now(), 'updated_at' => now()],
-        ];
-        DB::table('disaster_categories')->insert($categories);
+        // Auth lokal untuk admin
+        DB::table('user_auth')->insert([
+            [
+                'id' => Str::uuid()->toString(),
+                'user_id' => $superAdminId,
+                'provider' => 'local',
+                'provider_id' => null,
+                'password' => Hash::make('password'),
+                'created_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'user_id' => $adminBmkgId,
+                'provider' => 'local',
+                'provider_id' => null,
+                'password' => Hash::make('password'),
+                'created_at' => now(),
+            ],
+        ]);
 
         // =============================================
         // SEED 31 KECAMATAN JEMBER
         // =============================================
-        $subdistricts = [
-            ['name' => 'Ajung', 'code' => 'AJG', 'latitude' => -8.2000, 'longitude' => 113.7200, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Ambulu', 'code' => 'ABL', 'latitude' => -8.3500, 'longitude' => 113.6000, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Arjasa', 'code' => 'ARS', 'latitude' => -8.1200, 'longitude' => 113.8200, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Balung', 'code' => 'BLG', 'latitude' => -8.3100, 'longitude' => 113.5600, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Bangsalsari', 'code' => 'BGS', 'latitude' => -8.2400, 'longitude' => 113.5300, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Gumukmas', 'code' => 'GMK', 'latitude' => -8.3700, 'longitude' => 113.4500, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Jelbuk', 'code' => 'JLB', 'latitude' => -8.0800, 'longitude' => 113.7500, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Jenggawah', 'code' => 'JGW', 'latitude' => -8.2800, 'longitude' => 113.6500, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Jombang', 'code' => 'JBG', 'latitude' => -8.1600, 'longitude' => 113.7000, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Kalisat', 'code' => 'KLS', 'latitude' => -8.1300, 'longitude' => 113.7800, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Kaliwates', 'code' => 'KLW', 'latitude' => -8.1700, 'longitude' => 113.7100, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Kencong', 'code' => 'KCG', 'latitude' => -8.3500, 'longitude' => 113.3700, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Ledokombo', 'code' => 'LDK', 'latitude' => -8.0900, 'longitude' => 113.8500, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Mayang', 'code' => 'MYG', 'latitude' => -8.1100, 'longitude' => 113.6500, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Mumbulsari', 'code' => 'MBS', 'latitude' => -8.2600, 'longitude' => 113.7500, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Pakusari', 'code' => 'PKS', 'latitude' => -8.1400, 'longitude' => 113.7600, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Panti', 'code' => 'PNT', 'latitude' => -8.1000, 'longitude' => 113.6200, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Patrang', 'code' => 'PTR', 'latitude' => -8.1500, 'longitude' => 113.7000, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Puger', 'code' => 'PGR', 'latitude' => -8.3800, 'longitude' => 113.4800, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Rambipuji', 'code' => 'RBP', 'latitude' => -8.2200, 'longitude' => 113.6200, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Semboro', 'code' => 'SMB', 'latitude' => -8.2000, 'longitude' => 113.5000, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Silo', 'code' => 'SLO', 'latitude' => -8.2400, 'longitude' => 113.8800, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Sukorambi', 'code' => 'SKR', 'latitude' => -8.1300, 'longitude' => 113.6700, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Sukowono', 'code' => 'SKW', 'latitude' => -8.1200, 'longitude' => 113.8000, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Sumberbaru', 'code' => 'SBR', 'latitude' => -8.2800, 'longitude' => 113.4200, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Sumberjambe', 'code' => 'SBJ', 'latitude' => -8.0700, 'longitude' => 113.8800, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Sumbersari', 'code' => 'SBS', 'latitude' => -8.1800, 'longitude' => 113.7300, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Tanggul', 'code' => 'TGL', 'latitude' => -8.1800, 'longitude' => 113.5300, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Tempurejo', 'code' => 'TPR', 'latitude' => -8.3200, 'longitude' => 113.7500, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Umbulsari', 'code' => 'UBS', 'latitude' => -8.3200, 'longitude' => 113.4700, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Wuluhan', 'code' => 'WLH', 'latitude' => -8.3300, 'longitude' => 113.5900, 'created_at' => now(), 'updated_at' => now()],
+        $kecamatan = [
+            ['nama' => 'Ajung',        'latitude' => -8.2000000, 'longitude' => 113.7200000, 'kode_wilayah' => '35.09.01', 'level_rawan' => 'rendah'],
+            ['nama' => 'Ambulu',       'latitude' => -8.3500000, 'longitude' => 113.6000000, 'kode_wilayah' => '35.09.02', 'level_rawan' => 'sedang'],
+            ['nama' => 'Arjasa',       'latitude' => -8.1200000, 'longitude' => 113.8200000, 'kode_wilayah' => '35.09.03', 'level_rawan' => 'rendah'],
+            ['nama' => 'Balung',       'latitude' => -8.3100000, 'longitude' => 113.5600000, 'kode_wilayah' => '35.09.04', 'level_rawan' => 'sedang'],
+            ['nama' => 'Bangsalsari',  'latitude' => -8.2400000, 'longitude' => 113.5300000, 'kode_wilayah' => '35.09.05', 'level_rawan' => 'sedang'],
+            ['nama' => 'Gumukmas',     'latitude' => -8.3700000, 'longitude' => 113.4500000, 'kode_wilayah' => '35.09.06', 'level_rawan' => 'tinggi'],
+            ['nama' => 'Jelbuk',       'latitude' => -8.0800000, 'longitude' => 113.7500000, 'kode_wilayah' => '35.09.07', 'level_rawan' => 'rendah'],
+            ['nama' => 'Jenggawah',    'latitude' => -8.2800000, 'longitude' => 113.6500000, 'kode_wilayah' => '35.09.08', 'level_rawan' => 'sedang'],
+            ['nama' => 'Jombang',      'latitude' => -8.1600000, 'longitude' => 113.7000000, 'kode_wilayah' => '35.09.09', 'level_rawan' => 'rendah'],
+            ['nama' => 'Kalisat',      'latitude' => -8.1300000, 'longitude' => 113.7800000, 'kode_wilayah' => '35.09.10', 'level_rawan' => 'rendah'],
+            ['nama' => 'Kaliwates',    'latitude' => -8.1700000, 'longitude' => 113.7100000, 'kode_wilayah' => '35.09.11', 'level_rawan' => 'sedang'],
+            ['nama' => 'Kencong',      'latitude' => -8.3500000, 'longitude' => 113.3700000, 'kode_wilayah' => '35.09.12', 'level_rawan' => 'tinggi'],
+            ['nama' => 'Ledokombo',    'latitude' => -8.0900000, 'longitude' => 113.8500000, 'kode_wilayah' => '35.09.13', 'level_rawan' => 'rendah'],
+            ['nama' => 'Mayang',       'latitude' => -8.1100000, 'longitude' => 113.6500000, 'kode_wilayah' => '35.09.14', 'level_rawan' => 'rendah'],
+            ['nama' => 'Mumbulsari',   'latitude' => -8.2600000, 'longitude' => 113.7500000, 'kode_wilayah' => '35.09.15', 'level_rawan' => 'sedang'],
+            ['nama' => 'Pakusari',     'latitude' => -8.1400000, 'longitude' => 113.7600000, 'kode_wilayah' => '35.09.16', 'level_rawan' => 'rendah'],
+            ['nama' => 'Panti',        'latitude' => -8.1000000, 'longitude' => 113.6200000, 'kode_wilayah' => '35.09.17', 'level_rawan' => 'sedang'],
+            ['nama' => 'Patrang',      'latitude' => -8.1500000, 'longitude' => 113.7000000, 'kode_wilayah' => '35.09.18', 'level_rawan' => 'rendah'],
+            ['nama' => 'Puger',        'latitude' => -8.3800000, 'longitude' => 113.4800000, 'kode_wilayah' => '35.09.19', 'level_rawan' => 'tinggi'],
+            ['nama' => 'Rambipuji',    'latitude' => -8.2200000, 'longitude' => 113.6200000, 'kode_wilayah' => '35.09.20', 'level_rawan' => 'sedang'],
+            ['nama' => 'Semboro',      'latitude' => -8.2000000, 'longitude' => 113.5000000, 'kode_wilayah' => '35.09.21', 'level_rawan' => 'rendah'],
+            ['nama' => 'Silo',         'latitude' => -8.2400000, 'longitude' => 113.8800000, 'kode_wilayah' => '35.09.22', 'level_rawan' => 'sedang'],
+            ['nama' => 'Sukorambi',    'latitude' => -8.1300000, 'longitude' => 113.6700000, 'kode_wilayah' => '35.09.23', 'level_rawan' => 'rendah'],
+            ['nama' => 'Sukowono',     'latitude' => -8.1200000, 'longitude' => 113.8000000, 'kode_wilayah' => '35.09.24', 'level_rawan' => 'rendah'],
+            ['nama' => 'Sumberbaru',   'latitude' => -8.2800000, 'longitude' => 113.4200000, 'kode_wilayah' => '35.09.25', 'level_rawan' => 'sedang'],
+            ['nama' => 'Sumberjambe',  'latitude' => -8.0700000, 'longitude' => 113.8800000, 'kode_wilayah' => '35.09.26', 'level_rawan' => 'rendah'],
+            ['nama' => 'Sumbersari',   'latitude' => -8.1800000, 'longitude' => 113.7300000, 'kode_wilayah' => '35.09.27', 'level_rawan' => 'sedang'],
+            ['nama' => 'Tanggul',      'latitude' => -8.1800000, 'longitude' => 113.5300000, 'kode_wilayah' => '35.09.28', 'level_rawan' => 'sedang'],
+            ['nama' => 'Tempurejo',    'latitude' => -8.3200000, 'longitude' => 113.7500000, 'kode_wilayah' => '35.09.29', 'level_rawan' => 'tinggi'],
+            ['nama' => 'Umbulsari',    'latitude' => -8.3200000, 'longitude' => 113.4700000, 'kode_wilayah' => '35.09.30', 'level_rawan' => 'sedang'],
+            ['nama' => 'Wuluhan',      'latitude' => -8.3300000, 'longitude' => 113.5900000, 'kode_wilayah' => '35.09.31', 'level_rawan' => 'sedang'],
         ];
-        DB::table('subdistricts')->insert($subdistricts);
+
+        foreach ($kecamatan as $kec) {
+            DB::table('kecamatan')->insert(array_merge(
+                ['id' => Str::uuid()->toString()],
+                $kec
+            ));
+        }
+
+        // =============================================
+        // SEED KONTAK DARURAT
+        // =============================================
+        $kontakDarurat = [
+            ['nama' => 'BPBD Kabupaten Jember',         'nomor' => '0331-487500', 'kategori' => 'bpbd',     'keterangan' => 'Badan Penanggulangan Bencana Daerah'],
+            ['nama' => 'Polres Jember',                  'nomor' => '0331-486110', 'kategori' => 'polisi',   'keterangan' => 'Kepolisian Resort Jember'],
+            ['nama' => 'Damkar Jember',                  'nomor' => '0331-421113', 'kategori' => 'pemadam',  'keterangan' => 'Pemadam Kebakaran Kab. Jember'],
+            ['nama' => 'RSUD dr. Soebandi',              'nomor' => '0331-487441', 'kategori' => 'ambulans', 'keterangan' => 'IGD Rumah Sakit Umum Daerah Jember'],
+            ['nama' => 'SAR Jember',                     'nomor' => '0331-335577', 'kategori' => 'sar',      'keterangan' => 'Search and Rescue Jember'],
+            ['nama' => 'PLN Jember',                     'nomor' => '123',         'kategori' => 'pln',      'keterangan' => 'Gangguan Listrik'],
+            ['nama' => 'Call Center Bencana Nasional',   'nomor' => '117',         'kategori' => 'lainnya',  'keterangan' => 'Hotline Bencana Nasional BNPB'],
+        ];
+
+        foreach ($kontakDarurat as $kontak) {
+            DB::table('kontak_darurat')->insert(array_merge(
+                ['id' => Str::uuid()->toString(), 'is_active' => true],
+                $kontak
+            ));
+        }
+
+        // =============================================
+        // SEED FAQ
+        // =============================================
+        $faqs = [
+            ['pertanyaan' => 'Apa itu Jember Siaga?', 'jawaban' => 'Jember Siaga adalah platform pusat informasi dan koordinasi penanggulangan bencana Kabupaten Jember yang menyediakan data cuaca, peringatan dini, serta fitur pelaporan bencana oleh masyarakat.', 'kategori' => 'umum', 'urutan' => 1],
+            ['pertanyaan' => 'Bagaimana cara melaporkan bencana?', 'jawaban' => 'Anda dapat melaporkan bencana melalui menu "Lapor Bencana" di aplikasi. Isi formulir dengan lokasi, jenis bencana, deskripsi, dan lampirkan foto/video sebagai bukti. Laporan akan diverifikasi oleh petugas BPBD.', 'kategori' => 'laporan', 'urutan' => 2],
+            ['pertanyaan' => 'Dari mana sumber data cuaca?', 'jawaban' => 'Data cuaca bersumber dari BMKG (Badan Meteorologi, Klimatologi, dan Geofisika) dan diperbarui secara berkala untuk memberikan informasi prakiraan cuaca yang akurat.', 'kategori' => 'cuaca', 'urutan' => 3],
+            ['pertanyaan' => 'Apa arti level peringatan dini?', 'jawaban' => 'Level peringatan terdiri dari: Rendah (kondisi normal), Sedang (waspada), Tinggi (siaga - potensi bencana), dan Kritis (bahaya - bencana sedang/akan terjadi). Ikuti arahan BPBD sesuai level peringatan.', 'kategori' => 'peringatan', 'urutan' => 4],
+            ['pertanyaan' => 'Bagaimana sistem poin dan level bekerja?', 'jawaban' => 'Setiap laporan yang diverifikasi memberikan poin. Level naik otomatis: Pemula (0-2), Kontributor (3-9), Pelapor Aktif (10-19), Relawan (20-49), Pahlawan Siaga (50+). Level lebih tinggi mendapat badge khusus.', 'kategori' => 'gamifikasi', 'urutan' => 5],
+        ];
+
+        foreach ($faqs as $faq) {
+            DB::table('faq')->insert(array_merge(
+                ['id' => Str::uuid()->toString(), 'is_active' => true, 'dibuat_pada' => now(), 'updated_at' => now()],
+                $faq
+            ));
+        }
+
+        // =============================================
+        // SEED PANDUAN BENCANA (contoh banjir)
+        // =============================================
+        $panduanBanjir = [
+            ['judul' => 'Persiapan Sebelum Banjir', 'fase' => 'sebelum', 'urutan' => 1, 'konten' => 'Siapkan tas darurat berisi dokumen penting, obat-obatan, pakaian ganti, makanan kering, senter, dan power bank. Kenali rute evakuasi terdekat dan lokasi posko pengungsian di kecamatan Anda.'],
+            ['judul' => 'Saat Terjadi Banjir',      'fase' => 'saat',     'urutan' => 2, 'konten' => 'Segera menuju tempat yang lebih tinggi. Jangan berjalan atau berkendara melewati genangan air deras. Matikan aliran listrik jika air mulai masuk rumah. Hubungi nomor darurat BPBD Jember.'],
+            ['judul' => 'Setelah Banjir Surut',     'fase' => 'setelah',  'urutan' => 3, 'konten' => 'Periksa kondisi rumah sebelum kembali. Bersihkan lumpur dan sampah. Waspada terhadap hewan berbahaya. Periksa instalasi listrik sebelum menyalakan kembali. Laporkan kerusakan ke BPBD.'],
+            ['judul' => 'Cara Melapor Bencana',     'fase' => 'cara_lapor', 'urutan' => 4, 'konten' => 'Buka aplikasi Jember Siaga → Pilih menu Lapor Bencana → Pilih jenis bencana → Isi lokasi dan deskripsi → Lampirkan foto/video → Kirim laporan. Tim BPBD akan memverifikasi dan menindaklanjuti.'],
+        ];
+
+        foreach ($panduanBanjir as $panduan) {
+            DB::table('panduan_bencana')->insert(array_merge(
+                ['id' => Str::uuid()->toString(), 'jenis_bencana' => 'banjir', 'is_active' => true, 'dibuat_pada' => now(), 'updated_at' => now()],
+                $panduan
+            ));
+        }
     }
 }

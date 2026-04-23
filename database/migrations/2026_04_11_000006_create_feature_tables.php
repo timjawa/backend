@@ -2,159 +2,86 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        // =============================================
-        // TABEL KONTAK DARURAT KELUARGA (SOS)
-        // Kontak keluarga terdaftar untuk SOS
-        // =============================================
-        Schema::create('emergency_contacts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('name');
-            $table->string('phone', 20);
-            $table->string('relationship', 50)->nullable(); // Hubungan: ayah, ibu, suami, dll
-            $table->boolean('is_primary')->default(false);    // Kontak utama
-            $table->timestamps();
-
-            $table->index('user_id');
-        });
-
-        // =============================================
-        // TABEL SOS ALERT (Tombol Darurat)
-        // Riwayat penggunaan tombol SOS darurat
-        // =============================================
-        Schema::create('sos_alerts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->decimal('latitude', 10, 7);
-            $table->decimal('longitude', 10, 7);
-            $table->text('address')->nullable();
-            $table->text('message')->nullable();
-            $table->enum('status', ['active', 'responded', 'resolved', 'cancelled'])->default('active');
-
-            // Siapa yang merespon
-            $table->foreignId('responded_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamp('responded_at')->nullable();
-            $table->timestamp('resolved_at')->nullable();
-            $table->text('response_notes')->nullable();
-
-            // Notifikasi terkirim
-            $table->boolean('notified_bpbd')->default(false);
-            $table->boolean('notified_family')->default(false);
-            $table->boolean('called_center')->default(false);
-
-            $table->timestamps();
-
-            $table->index('user_id');
-            $table->index('status');
-            $table->index('created_at');
-        });
-
-        // =============================================
-        // TABEL LAPORAN RESMI (PDF ke Kapolres)
-        // Generate laporan resmi BPBD
-        // =============================================
-        Schema::create('official_reports', function (Blueprint $table) {
-            $table->id();
-            $table->string('report_number')->unique();      // Nomor surat resmi
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
-            $table->string('title');
-            $table->longText('content');
-            $table->string('recipient');                      // Tujuan: Kapolres, dll
-            $table->string('pdf_path')->nullable();           // Path file PDF
-            $table->enum('status', ['draft', 'finalized', 'sent'])->default('draft');
-            $table->timestamp('sent_at')->nullable();
-
-            // Relasi ke laporan-laporan bencana yang terkait
-            $table->json('related_report_ids')->nullable();   // Array ID disaster_reports
-
-            $table->timestamps();
-
-            $table->index('status');
-        });
-
-        // =============================================
-        // TABEL CHATBOT CONVERSATIONS (Log Chatbot AI)
-        // Riwayat percakapan chatbot
-        // =============================================
-        Schema::create('chatbot_conversations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->string('session_id')->index();
-            $table->timestamps();
-        });
-
-        Schema::create('chatbot_messages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('conversation_id')->constrained('chatbot_conversations')->onDelete('cascade');
-            $table->enum('role', ['user', 'assistant']);
-            $table->text('message');
-            $table->json('metadata')->nullable();    // Data tambahan (intent, confidence, dll)
-            $table->timestamps();
-
-            $table->index('conversation_id');
-        });
-
-        // =============================================
-        // TABEL NOTIFICATIONS (Notifikasi Sistem)
-        // =============================================
-        Schema::create('notifications', function (Blueprint $table) {
+        // TABEL PERINGATAN_DINI
+        Schema::create('peringatan_dini', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('title');
-            $table->text('message');
-            $table->string('type', 50);               // report_update, sos_alert, announcement, weather_warning
-            $table->string('reference_type')->nullable(); // Model class
-            $table->unsignedBigInteger('reference_id')->nullable(); // ID terkait
+            $table->uuid('kecamatan_id');
+            $table->uuid('dibuat_oleh');
+            $table->text('deskripsi')->nullable();
+            $table->enum('tingkat_urgensi', ['rendah', 'sedang', 'tinggi', 'kritis'])->default('rendah');
+            $table->timestamp('berlaku_hingga')->nullable();
+            $table->timestamp('created_at')->nullable()->useCurrent();
+
+            $table->foreign('kecamatan_id')->references('id')->on('kecamatan')->onDelete('cascade');
+            $table->foreign('dibuat_oleh')->references('id')->on('users')->onDelete('cascade');
+            $table->index('kecamatan_id');
+            $table->index('dibuat_oleh');
+        });
+
+        // TABEL NOTIFIKASI
+        Schema::create('notifikasi', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('user_id');
+            $table->string('judul');
+            $table->text('pesan');
+            $table->enum('tipe', ['peringatan_dini', 'update_laporan', 'info_cuaca', 'info_banjir', 'sistem', 'poin'])->default('sistem');
+            $table->uuid('reference_id')->nullable();
             $table->boolean('is_read')->default(false);
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
+            $table->timestamp('dibuat_pada')->nullable()->useCurrent();
 
-            $table->index(['user_id', 'is_read']);
-            $table->index('type');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->index(['user_id', 'is_read'], 'idx_notif_user');
         });
 
-        // =============================================
-        // TABEL ACTIVITY LOG (Audit Trail)
-        // Log aktivitas admin & petugas
-        // =============================================
-        Schema::create('activity_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->string('action');                // create, update, delete, verify, etc.
-            $table->string('model_type')->nullable();
-            $table->unsignedBigInteger('model_id')->nullable();
-            $table->json('old_values')->nullable();
-            $table->json('new_values')->nullable();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->timestamps();
+        // TABEL KONTAK_DARURAT
+        Schema::create('kontak_darurat', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('nama');
+            $table->string('nomor', 30);
+            $table->enum('kategori', ['polisi', 'pemadam', 'ambulans', 'bpbd', 'sar', 'pln', 'lainnya'])->default('lainnya');
+            $table->string('keterangan')->nullable();
+            $table->boolean('is_active')->default(true);
+        });
 
-            $table->index(['model_type', 'model_id']);
+        // TABEL POINT_TRANSACTIONS
+        Schema::create('point_transactions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('user_id');
+            $table->integer('points');
+            $table->enum('type', ['laporan', 'validasi', 'bonus', 'penalti']);
+            $table->uuid('reference_id')->nullable();
+            $table->text('description')->nullable();
+            $table->timestamp('created_at')->nullable()->useCurrent();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->index('user_id');
-            $table->index('action');
         });
+
+        // Trigger: auto-update user_points saat insert point_transactions
+        DB::unprepared('
+            CREATE TRIGGER after_insert_point AFTER INSERT ON point_transactions FOR EACH ROW
+            BEGIN
+              INSERT INTO user_points (user_id, total_points)
+              VALUES (NEW.user_id, NEW.points)
+              ON DUPLICATE KEY UPDATE
+                total_points = total_points + NEW.points;
+            END
+        ');
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('activity_logs');
-        Schema::dropIfExists('notifications');
-        Schema::dropIfExists('chatbot_messages');
-        Schema::dropIfExists('chatbot_conversations');
-        Schema::dropIfExists('official_reports');
-        Schema::dropIfExists('sos_alerts');
-        Schema::dropIfExists('emergency_contacts');
+        DB::unprepared('DROP TRIGGER IF EXISTS after_insert_point');
+        Schema::dropIfExists('point_transactions');
+        Schema::dropIfExists('kontak_darurat');
+        Schema::dropIfExists('notifikasi');
+        Schema::dropIfExists('peringatan_dini');
     }
 };
