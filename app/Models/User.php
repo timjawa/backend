@@ -2,31 +2,92 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\LaporanBencana;
+use App\Models\Notifikasi;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasUuids, Notifiable, HasApiTokens;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $table = 'users';
+
+    public $timestamps = false;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'role',
+        'is_active',
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'is_active' => 'boolean',
+            'created_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Override getAuthPassword to fetch password from user_auth table.
+     * Laravel's Auth::attempt() calls this method internally.
+     */
+    public function getAuthPassword(): ?string
+    {
+        $auth = $this->userAuth()->where('provider', 'local')->first();
+        return $auth?->password;
+    }
+
+    // =========================================
+    // RELATIONSHIPS
+    // =========================================
+
+    public function userAuth(): HasMany
+    {
+        return $this->hasMany(UserAuth::class, 'user_id');
+    }
+
+    public function localAuth(): HasOne
+    {
+        return $this->hasOne(UserAuth::class, 'user_id')->where('provider', 'local');
+    }
+
+    public function berita(): HasMany
+    {
+        return $this->hasMany(Berita::class, 'dibuat_oleh');
+    }
+
+    public function laporanBencana(): HasMany
+    {
+        return $this->hasMany(LaporanBencana::class, 'user_id');
+    }
+
+    public function notifikasi(): HasMany
+    {
+        return $this->hasMany(Notifikasi::class, 'user_id');
+    }
+
+    // =========================================
+    // HELPERS
+    // =========================================
+
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['admin_bmkg', 'super_admin']);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
     }
 }
