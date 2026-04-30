@@ -44,3 +44,9 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
     Route::put('/berita/{id}',      [BeritaController::class, 'update']);
     Route::delete('/berita/{id}',   [BeritaController::class, 'destroy']);
 });
+
+// =============================================
+// WEATHER ROUTES
+// =============================================
+Route::get('/weather/realtime', [\App\Http\Controllers\WeatherController::class, 'getRealtime']);
+Route::get('/weather/forecast', [\App\Http\Controllers\WeatherController::class, 'getForecast']);
