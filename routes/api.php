@@ -50,3 +50,8 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
 // =============================================
 Route::get('/weather/realtime', [\App\Http\Controllers\WeatherController::class, 'getRealtime']);
 Route::get('/weather/forecast', [\App\Http\Controllers\WeatherController::class, 'getForecast']);
+
+// =============================================
+// FIREBASE AUTH ROUTES (Public)
+// =============================================
+Route::post('/auth/firebase', [\App\Http\Controllers\Api\AuthFirebaseController::class, 'verifyFirebase']);
