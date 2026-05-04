@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // =============================================
-        // TABEL KECAMATAN (31 Kecamatan di Jember)
+        // TABEL KECAMATAN 
         // =============================================
         Schema::create('kecamatan', function (Blueprint $table) {
             $table->uuid('id')->primary();

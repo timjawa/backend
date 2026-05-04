@@ -12,19 +12,23 @@ return new class extends Migration
     public function up(): void
     {
         // =============================================
-        // TABEL USERS
+        // TABEL USERS 
         // =============================================
         Schema::create('users', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('email')->unique();
-            $table->enum('role', ['masyarakat', 'admin_bmkg', 'super_admin'])->default('masyarakat');
+            $table->text('alamat')->nullable(); 
+            $table->string('no_telepon', 20)->nullable(); 
+            $table->string('foto')->nullable(); 
+            $table->enum('role', ['masyarakat', 'admin_bpbd', 'super_admin'])->default('masyarakat');
             $table->boolean('is_active')->default(true);
             $table->timestamp('created_at')->nullable()->useCurrent();
+            $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
         });
 
         // =============================================
-        // TABEL USER_AUTH (Login lokal & OAuth Google)
+        // TABEL USER_AUTH 
         // =============================================
         Schema::create('user_auth', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -40,20 +44,7 @@ return new class extends Migration
         });
 
         // =============================================
-        // TABEL USER_LEVELS (Gamifikasi level pelapor)
-        // =============================================
-        Schema::create('user_levels', function (Blueprint $table) {
-            $table->uuid('user_id')->primary();
-            $table->enum('level', ['pemula', 'kontributor', 'pelapor_aktif', 'relawan', 'pahlawan_siaga'])->default('pemula');
-            $table->integer('laporan_terverifikasi')->default(0);
-            $table->integer('badge_count')->default(0);
-            $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate()->useCurrent();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });
-
-        // =============================================
-        // TABEL USER_POINTS
+        // TABEL USER_POINTS 
         // =============================================
         Schema::create('user_points', function (Blueprint $table) {
             $table->uuid('user_id')->primary();
@@ -64,24 +55,7 @@ return new class extends Migration
         });
 
         // =============================================
-        // TABEL USER_MEDICAL_INFO (Info medis darurat)
-        // =============================================
-        Schema::create('user_medical_info', function (Blueprint $table) {
-            $table->uuid('user_id')->primary();
-            $table->enum('golongan_darah', ['A', 'B', 'AB', 'O', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])->nullable();
-            $table->text('alergi')->nullable();
-            $table->text('kondisi_khusus')->nullable();
-            $table->text('obat_rutin')->nullable();
-            $table->string('kontak_darurat_nama')->nullable();
-            $table->string('kontak_darurat_nomor', 30)->nullable();
-            $table->string('kontak_darurat_relasi', 100)->nullable();
-            $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate()->useCurrent();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });
-
-        // =============================================
-        // TABEL USER_DEVICE_TOKENS (Push notification)
+        // TABEL USER_DEVICE_TOKENS 
         // =============================================
         Schema::create('user_device_tokens', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -124,9 +98,7 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('user_device_tokens');
-        Schema::dropIfExists('user_medical_info');
         Schema::dropIfExists('user_points');
-        Schema::dropIfExists('user_levels');
         Schema::dropIfExists('user_auth');
         Schema::dropIfExists('users');
     }
