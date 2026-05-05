@@ -67,7 +67,6 @@ class AuthFirebaseController extends Controller
                 $user = $userAuth->user;
                 $user->update([
                     'name'         => $displayName,
-                    'full_name'    => $displayName,
                     'firebase_uid' => $firebaseUid,
                 ]);
             } else {
@@ -78,7 +77,6 @@ class AuthFirebaseController extends Controller
                     // Buat user baru di tabel users
                     $user = User::create([
                         'name'         => $displayName,
-                        'full_name'    => $displayName,
                         'firebase_uid' => $firebaseUid,
                         'email'        => $email,
                         'role'         => 'masyarakat',
@@ -88,7 +86,6 @@ class AuthFirebaseController extends Controller
                     // User sudah ada via email — link firebase_uid
                     $user->update([
                         'firebase_uid' => $firebaseUid,
-                        'full_name'    => $user->full_name ?? $displayName,
                     ]);
                 }
 
@@ -108,11 +105,10 @@ class AuthFirebaseController extends Controller
                 'status'  => 'success',
                 'message' => 'Autentikasi Firebase berhasil',
                 'user'    => [
-                    'id'        => $user->id,
-                    'name'      => $user->name,
-                    'full_name' => $user->full_name,
-                    'email'     => $user->email,
-                    'role'      => $user->role,
+                    'id'    => $user->id,
+                    'name'  => $user->name,
+                    'email' => $user->email,
+                    'role'  => $user->role,
                 ],
                 'token' => $token,
             ]);

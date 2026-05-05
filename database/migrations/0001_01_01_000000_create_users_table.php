@@ -18,6 +18,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('firebase_uid')->unique()->nullable();
             $table->text('alamat')->nullable(); 
             $table->string('no_telepon', 20)->nullable(); 
             $table->string('foto')->nullable(); 
@@ -33,7 +34,7 @@ return new class extends Migration
         Schema::create('user_auth', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('user_id');
-            $table->enum('provider', ['local', 'google']);
+            $table->enum('provider', ['local', 'google', 'firebase', '']);
             $table->string('provider_id')->nullable();
             $table->string('password')->nullable();
             $table->timestamp('created_at')->nullable()->useCurrent();
