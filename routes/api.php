@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BeritaController;
+use App\Http\Controllers\Api\FaqController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,6 +44,20 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
     Route::post('/berita',          [BeritaController::class, 'store']);
     Route::put('/berita/{id}',      [BeritaController::class, 'update']);
     Route::delete('/berita/{id}',   [BeritaController::class, 'destroy']);
+});
+
+// =============================================
+// FAQ ROUTES
+// =============================================
+// Public: list & show
+Route::get('/faq',      [FaqController::class, 'index']);
+Route::get('/faq/{id}', [FaqController::class, 'show']);
+
+// Admin only: create, update, delete
+Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+    Route::post('/faq',          [FaqController::class, 'store']);
+    Route::put('/faq/{id}',      [FaqController::class, 'update']);
+    Route::delete('/faq/{id}',   [FaqController::class, 'destroy']);
 });
 
 // =============================================
