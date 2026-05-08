@@ -19,6 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'isAdmin' => \App\Http\Middleware\IsAdmin::class,
         ]);
+
+        // Exclude API routes from CSRF protection when using Bearer tokens
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+            'sanctum/csrf-cookie',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

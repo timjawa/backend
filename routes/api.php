@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BeritaController;
+use App\Http\Controllers\Api\KecamatanController;
+use App\Http\Controllers\Api\KontakDaruratController;
 use App\Http\Controllers\Api\FaqController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +46,35 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
     Route::post('/berita',          [BeritaController::class, 'store']);
     Route::put('/berita/{id}',      [BeritaController::class, 'update']);
     Route::delete('/berita/{id}',   [BeritaController::class, 'destroy']);
+});
+
+// =============================================
+// KECAMATAN ROUTES
+// =============================================
+// Public: list, show, & stats
+Route::get('/kecamatan',      [KecamatanController::class, 'index']);
+Route::get('/kecamatan/stats', [KecamatanController::class, 'stats']);
+Route::get('/kecamatan/{id}', [KecamatanController::class, 'show']);
+
+// Admin only: create, update, delete
+Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+    Route::post('/kecamatan',          [KecamatanController::class, 'store']);
+    Route::put('/kecamatan/{id}',      [KecamatanController::class, 'update']);
+    Route::delete('/kecamatan/{id}',   [KecamatanController::class, 'destroy']);
+});
+
+// =============================================
+// KONTAK DARURAT ROUTES
+// =============================================
+// Public: list & show
+Route::get('/kontak-darurat',      [KontakDaruratController::class, 'index']);
+Route::get('/kontak-darurat/{id}', [KontakDaruratController::class, 'show']);
+
+// Admin only: create, update, delete
+Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+    Route::post('/kontak-darurat',          [KontakDaruratController::class, 'store']);
+    Route::put('/kontak-darurat/{id}',      [KontakDaruratController::class, 'update']);
+    Route::delete('/kontak-darurat/{id}',   [KontakDaruratController::class, 'destroy']);
 });
 
 // =============================================
