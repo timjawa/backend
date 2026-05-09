@@ -27,6 +27,7 @@ Route::post('/mobile/login', [AuthController::class, 'loginMobile']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user',    [AuthController::class, 'user']);
+    Route::put('/user',    [AuthController::class, 'updateProfile']);
     
     // Mobile auth endpoints (protected)
     Route::post('/mobile/logout', [AuthController::class, 'logoutMobile']);

@@ -23,6 +23,9 @@ class User extends Authenticatable
         'name',
         'firebase_uid',
         'email',
+        'alamat',
+        'no_telepon',
+        'foto',
         'role',
         'is_active',
     ];
