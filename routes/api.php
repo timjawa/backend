@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BeritaController;
 use App\Http\Controllers\Api\KecamatanController;
 use App\Http\Controllers\Api\KontakDaruratController;
+use App\Http\Controllers\Api\FaqController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -75,6 +76,20 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
     Route::post('/kontak-darurat',          [KontakDaruratController::class, 'store']);
     Route::put('/kontak-darurat/{id}',      [KontakDaruratController::class, 'update']);
     Route::delete('/kontak-darurat/{id}',   [KontakDaruratController::class, 'destroy']);
+});
+
+// =============================================
+// FAQ ROUTES
+// =============================================
+// Public: list & show
+Route::get('/faq',      [FaqController::class, 'index']);
+Route::get('/faq/{id}', [FaqController::class, 'show']);
+
+// Admin only: create, update, delete
+Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+    Route::post('/faq',          [FaqController::class, 'store']);
+    Route::put('/faq/{id}',      [FaqController::class, 'update']);
+    Route::delete('/faq/{id}',   [FaqController::class, 'destroy']);
 });
 
 // =============================================
