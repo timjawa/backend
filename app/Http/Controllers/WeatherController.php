@@ -6,13 +6,67 @@ use Illuminate\Http\Request;
 use App\Models\Kecamatan;
 use App\Models\CuacaRealtime;
 use App\Models\PerkiraanCuaca;
+use App\Models\HistoricalCuaca;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class WeatherController extends Controller
 {
+    public function getHistorical(Request $request)
+    {
+        $kecamatanId = $request->query('kecamatan_id');
+        
+        $query = HistoricalCuaca::with('kecamatan:id,nama')
+            ->where('waktu', '>=', Carbon::now()->subDays(7));
+
+        if ($kecamatanId) {
+            $query->where('kecamatan_id', $kecamatanId);
+        }
+
+        $data = $query->orderBy('waktu', 'asc')->get();
+
+        // Kelompokkan per kecamatan
+        $grouped = $data->groupBy(function($item) {
+            return $item->kecamatan->nama;
+        });
+
+        // Hitung rata-rata per hari per kecamatan
+        $result = [];
+        foreach ($grouped as $kecamatan => $records) {
+            $dailyAvg = [];
+            foreach ($records as $record) {
+                $date = Carbon::parse($record->waktu)->format('Y-m-d');
+                if (!isset($dailyAvg[$date])) {
+                    $dailyAvg[$date] = [
+                        'suhu_total' => 0,
+                        'hujan_total' => 0,
+                        'count' => 0,
+                    ];
+                }
+                $dailyAvg[$date]['suhu_total'] += $record->suhu;
+                $dailyAvg[$date]['hujan_total'] += $record->curah_hujan ?? 0;
+                $dailyAvg[$date]['count']++;
+            }
+
+            $formattedDaily = [];
+            foreach ($dailyAvg as $date => $stats) {
+                $formattedDaily[] = [
+                    'tanggal' => $date,
+                    'suhu_avg' => round($stats['suhu_total'] / $stats['count'], 1),
+                    'hujan_avg' => round($stats['hujan_total'] / $stats['count'], 1),
+                ];
+            }
+            $result[$kecamatan] = $formattedDaily;
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $result
+        ]);
+    }
     public function getRealtime()
     {
         // Cek data terakhir
