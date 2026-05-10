@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BeritaController extends Controller
 {
@@ -35,14 +36,14 @@ class BeritaController extends Controller
     {
         $validated = $request->validate([
             'judul'            => ['required', 'string', 'max:255'],
+            'slug'             => ['required', 'string', 'max:255', 'unique:berita,slug'],
             'konten'           => ['required', 'string'],
             'ringkasan'        => ['nullable', 'string'],
-            'foto_cover'       => ['nullable', 'string', 'max:512'],
+            'foto_cover'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
             'kategori'         => ['nullable', 'in:umum,banjir,longsor,kebakaran,angin_kencang,gempa,cuaca'],
             'sumber'           => ['nullable', 'string', 'max:255'],
             'status'           => ['nullable', 'in:draft,published,archived'],
-            'tags'             => ['nullable', 'array'],
-            'tags.*'           => ['string', 'max:50'],
+            'tags'             => ['nullable', 'string'], // Menerima string dari FormData
         ]);
 
         // Auto-fill author from authenticated user
@@ -53,12 +54,21 @@ class BeritaController extends Controller
             $validated['dipublikasi_pada'] = now();
         }
 
+        // Handle upload foto_cover
+        if ($request->hasFile('foto_cover')) {
+            $path = $request->file('foto_cover')->store('uploads/berita', 'public');
+            $validated['foto_cover'] = $path;
+        }
+
         $berita = Berita::create($validated);
 
-        // Create tags if provided
+        // Create tags if provided (dipecah dari comma-separated string)
         if (!empty($validated['tags'])) {
-            foreach ($validated['tags'] as $tag) {
-                $berita->tags()->create(['tag' => $tag]);
+            $tagsArray = array_map('trim', explode(',', $validated['tags']));
+            foreach ($tagsArray as $tag) {
+                if (!empty($tag)) {
+                    $berita->tags()->create(['tag' => $tag]);
+                }
             }
         }
 
@@ -90,15 +100,27 @@ class BeritaController extends Controller
 
         $validated = $request->validate([
             'judul'            => ['sometimes', 'string', 'max:255'],
+            'slug'             => ['sometimes', 'string', 'max:255', 'unique:berita,slug,' . $berita->id],
             'konten'           => ['sometimes', 'string'],
             'ringkasan'        => ['nullable', 'string'],
-            'foto_cover'       => ['nullable', 'string', 'max:512'],
+            'foto_cover'       => ['nullable'], // Bisa string atau file
             'kategori'         => ['nullable', 'in:umum,banjir,longsor,kebakaran,angin_kencang,gempa,cuaca'],
             'sumber'           => ['nullable', 'string', 'max:255'],
             'status'           => ['nullable', 'in:draft,published,archived'],
-            'tags'             => ['nullable', 'array'],
-            'tags.*'           => ['string', 'max:50'],
+            'tags'             => ['nullable', 'string'],
         ]);
+
+        if ($request->hasFile('foto_cover')) {
+            // Hapus file foto lama dari storage agar "clean" (tidak menumpuk sampah)
+            if ($berita->foto_cover && Storage::disk('public')->exists($berita->foto_cover)) {
+                Storage::disk('public')->delete($berita->foto_cover);
+            }
+            
+            $validated['foto_cover'] = $request->file('foto_cover')->store('uploads/berita', 'public');
+        } else {
+            // Jika tidak ada file baru, hapus dari validated agar tidak menimpa data lama dengan null
+            unset($validated['foto_cover']);
+        }
 
         // If changing to published and not yet published, set the date
         if (($validated['status'] ?? null) === 'published' && !$berita->dipublikasi_pada) {
@@ -110,8 +132,11 @@ class BeritaController extends Controller
         // Sync tags if provided
         if (isset($validated['tags'])) {
             $berita->tags()->delete();
-            foreach ($validated['tags'] as $tag) {
-                $berita->tags()->create(['tag' => $tag]);
+            $tagsArray = array_map('trim', explode(',', $validated['tags']));
+            foreach ($tagsArray as $tag) {
+                if (!empty($tag)) {
+                    $berita->tags()->create(['tag' => $tag]);
+                }
             }
         }
 
@@ -129,6 +154,12 @@ class BeritaController extends Controller
     public function destroy(string $id): JsonResponse
     {
         $berita = Berita::findOrFail($id);
+        
+        // Hapus file fisik foto dari storage agar "clean"
+        if ($berita->foto_cover && Storage::disk('public')->exists($berita->foto_cover)) {
+            Storage::disk('public')->delete($berita->foto_cover);
+        }
+        
         $berita->delete();
 
         return response()->json([
