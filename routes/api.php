@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BeritaController;
 use App\Http\Controllers\Api\KecamatanController;
 use App\Http\Controllers\Api\KontakDaruratController;
+use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Api\LaporanBencanaController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,10 +29,18 @@ Route::post('/mobile/login', [AuthController::class, 'loginMobile']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user',    [AuthController::class, 'user']);
-    
+    Route::put('/user',    [AuthController::class, 'updateProfile']);
+
     // Mobile auth endpoints (protected)
     Route::post('/mobile/logout', [AuthController::class, 'logoutMobile']);
     Route::post('/mobile/logout-all', [AuthController::class, 'logoutAllDevices']);
+
+    // =============================================
+    // LAPORAN BENCANA ROUTES (User authenticated)
+    // =============================================
+    Route::get('/laporan',       [LaporanBencanaController::class, 'index']);
+    Route::post('/laporan',      [LaporanBencanaController::class, 'store']);
+    Route::get('/laporan/{id}',  [LaporanBencanaController::class, 'show']);
 });
 
 // =============================================
@@ -77,10 +87,39 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
 });
 
 // =============================================
+// PERINGATAN DINI ROUTES
+// =============================================
+// Public: list & show
+Route::get('/peringatan-dini',      [\App\Http\Controllers\Api\PeringatanDiniController::class, 'index']);
+Route::get('/peringatan-dini/{id}', [\App\Http\Controllers\Api\PeringatanDiniController::class, 'show']);
+
+// Admin only: create, update, delete
+Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+    Route::post('/peringatan-dini',          [\App\Http\Controllers\Api\PeringatanDiniController::class, 'store']);
+    Route::put('/peringatan-dini/{id}',      [\App\Http\Controllers\Api\PeringatanDiniController::class, 'update']);
+    Route::delete('/peringatan-dini/{id}',   [\App\Http\Controllers\Api\PeringatanDiniController::class, 'destroy']);
+});
+
+// =============================================
+// FAQ ROUTES
+// =============================================
+// Public: list & show
+Route::get('/faq',      [FaqController::class, 'index']);
+Route::get('/faq/{id}', [FaqController::class, 'show']);
+
+// Admin only: create, update, delete
+Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+    Route::post('/faq',          [FaqController::class, 'store']);
+    Route::put('/faq/{id}',      [FaqController::class, 'update']);
+    Route::delete('/faq/{id}',   [FaqController::class, 'destroy']);
+});
+
+// =============================================
 // WEATHER ROUTES
 // =============================================
 Route::get('/weather/realtime', [\App\Http\Controllers\WeatherController::class, 'getRealtime']);
 Route::get('/weather/forecast', [\App\Http\Controllers\WeatherController::class, 'getForecast']);
+Route::get('/weather/historical', [\App\Http\Controllers\WeatherController::class, 'getHistorical']);
 
 // =============================================
 // FIREBASE AUTH ROUTES (Public)

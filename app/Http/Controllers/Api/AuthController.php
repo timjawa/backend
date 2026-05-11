@@ -123,11 +123,43 @@ class AuthController extends Controller
 
         return response()->json([
             'user' => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'role'       => $user->role,
+                'alamat'     => $user->alamat,
+                'no_telepon' => $user->no_telepon,
+                'foto'       => $user->foto,
             ],
+        ]);
+    }
+
+    /**
+     * Update the authenticated user's profile.
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validatedData = $request->validate([
+            'name'       => ['sometimes', 'required', 'string', 'max:255'],
+            'alamat'     => ['sometimes', 'nullable', 'string'],
+            'no_telepon' => ['sometimes', 'nullable', 'string', 'max:20'],
+        ]);
+
+        $user->update($validatedData);
+
+        return response()->json([
+            'message' => 'Profil berhasil diperbarui',
+            'user'    => [
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'role'       => $user->role,
+                'alamat'     => $user->alamat,
+                'no_telepon' => $user->no_telepon,
+                'foto'       => $user->foto,
+            ]
         ]);
     }
 
