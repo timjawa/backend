@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -29,6 +31,8 @@ class User extends Authenticatable
         'role',
         'is_active',
     ];
+
+    protected $appends = ['foto_url', 'total_laporan', 'total_diverifikasi', 'poin'];
 
     protected $hidden = [
         'password',
@@ -93,5 +97,38 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->role === 'super_admin';
+    }
+
+    protected function fotoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (!$this->foto) {
+                    return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random';
+                }
+                return asset('storage/' . $this->foto);
+            }
+        );
+    }
+
+    protected function totalLaporan(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->laporanBencana()->count()
+        );
+    }
+
+    protected function totalDiverifikasi(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->laporanBencana()->whereIn('status', ['selesai', 'terverifikasi'])->count()
+        );
+    }
+
+    protected function poin(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->laporanBencana()->count() * 100 // Contoh: 1 laporan = 100 poin
+        );
     }
 }
