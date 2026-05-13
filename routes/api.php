@@ -139,7 +139,14 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
 // =============================================
 Route::get('/weather/realtime', [\App\Http\Controllers\WeatherController::class, 'getRealtime']);
 Route::get('/weather/forecast', [\App\Http\Controllers\WeatherController::class, 'getForecast']);
+Route::get('/weather/forecast-summary', [\App\Http\Controllers\WeatherController::class, 'getForecastSummary']);
 Route::get('/weather/historical', [\App\Http\Controllers\WeatherController::class, 'getHistorical']);
+
+// Admin only: refresh weather
+Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+    Route::post('/weather/refresh', [\App\Http\Controllers\WeatherController::class, 'refreshRealtime']);
+    Route::post('/weather/refresh-forecast', [\App\Http\Controllers\WeatherController::class, 'refreshForecast']);
+});
 
 // =============================================
 // FIREBASE AUTH ROUTES (Public)

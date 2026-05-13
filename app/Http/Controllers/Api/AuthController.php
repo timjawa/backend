@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
@@ -129,7 +130,7 @@ class AuthController extends Controller
                 'role'       => $user->role,
                 'alamat'     => $user->alamat,
                 'no_telepon' => $user->no_telepon,
-                'foto'       => $user->foto,
+                'foto_url'   => $user->foto_url,
             ],
         ]);
     }
@@ -145,9 +146,25 @@ class AuthController extends Controller
             'name'       => ['sometimes', 'required', 'string', 'max:255'],
             'alamat'     => ['sometimes', 'nullable', 'string'],
             'no_telepon' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'foto'       => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5120'], // Max 5MB
         ]);
 
-        $user->update($validatedData);
+        // Handle Photo Upload
+        if ($request->hasFile('foto')) {
+            // Delete old photo if exists
+            if ($user->foto) {
+                Storage::disk('public')->delete($user->foto);
+            }
+
+            // Store new photo
+            $path = $request->file('foto')->store('profiles', 'public');
+            $user->foto = $path;
+        }
+
+        $user->name = $request->input('name', $user->name);
+        $user->alamat = $request->input('alamat', $user->alamat);
+        $user->no_telepon = $request->input('no_telepon', $user->no_telepon);
+        $user->save();
 
         return response()->json([
             'message' => 'Profil berhasil diperbarui',
@@ -158,7 +175,7 @@ class AuthController extends Controller
                 'role'       => $user->role,
                 'alamat'     => $user->alamat,
                 'no_telepon' => $user->no_telepon,
-                'foto'       => $user->foto,
+                'foto_url'   => $user->foto_url,
             ]
         ]);
     }
@@ -215,6 +232,7 @@ class AuthController extends Controller
                 'name'  => $user->name,
                 'email' => $user->email,
                 'role'  => $user->role,
+                'foto_url' => $user->foto_url,
             ],
         ]);
     }
