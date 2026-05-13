@@ -73,6 +73,26 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
 });
 
 // =============================================
+// LAPORAN BENCANA ROUTES
+// =============================================
+// User routes (authenticated)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/laporan',      [LaporanBencanaController::class, 'index']);
+    Route::post('/laporan',      [LaporanBencanaController::class, 'store']);
+    Route::get('/laporan/{id}', [LaporanBencanaController::class, 'show']);
+});
+
+// Admin only: manage all laporan
+Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin/laporan')->group(function () {
+    Route::get('/',              [LaporanBencanaController::class, 'adminIndex']);
+    Route::get('/stats',         [LaporanBencanaController::class, 'adminStats']);
+    Route::get('/{id}',          [LaporanBencanaController::class, 'adminShow']);
+    Route::put('/{id}/status',  [LaporanBencanaController::class, 'updateStatus']);
+    Route::post('/{id}/comment', [LaporanBencanaController::class, 'addComment']);
+    Route::delete('/{id}',       [LaporanBencanaController::class, 'adminDestroy']);
+});
+
+// =============================================
 // KONTAK DARURAT ROUTES
 // =============================================
 // Public: list & show

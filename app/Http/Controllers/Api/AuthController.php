@@ -37,7 +37,7 @@ class AuthController extends Controller
         UserAuth::create([
             'user_id'  => $user->id,
             'provider' => 'local',
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'], // 'hashed' cast di model yang akan hash otomatis
         ]);
 
         return response()->json([

@@ -10,7 +10,7 @@ class IsAdmin
 {
     /**
      * Handle an incoming request.
-     * Only allow admin_bmkg and super_admin roles.
+     * Hanya admin_bpbd, admin_bmkg (opsional), dan super_admin (sesuai enum users.role).
      */
     public function handle(Request $request, Closure $next): Response
     {

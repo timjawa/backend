@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
 
         UserAuth::firstOrCreate(
             ['user_id' => $superAdmin->id, 'provider' => 'local'],
-            ['password' => Hash::make('password')]
+            ['password' => 'password'] // 'hashed' cast di model yang akan hash otomatis
         );
 
         $adminBmkg = User::firstOrCreate(
@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
 
         UserAuth::firstOrCreate(
             ['user_id' => $adminBmkg->id, 'provider' => 'local'],
-            ['password' => Hash::make('password')]
+            ['password' => 'password'] // 'hashed' cast di model yang akan hash otomatis
         );
 
         $masyarakat = User::firstOrCreate(
@@ -59,7 +59,7 @@ class DatabaseSeeder extends Seeder
 
         UserAuth::firstOrCreate(
             ['user_id' => $masyarakat->id, 'provider' => 'local'],
-            ['password' => Hash::make('password')]
+            ['password' => 'password'] // 'hashed' cast di model yang akan hash otomatis
         );
 
         // =============================================

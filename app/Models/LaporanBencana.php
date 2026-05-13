@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\LaporanMedia;
-use App\Models\LaporanKomentar;
 
 class LaporanBencana extends Model
 {
@@ -49,13 +47,18 @@ class LaporanBencana extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function kecamatan(): BelongsTo
+    {
+        return $this->belongsTo(Kecamatan::class, 'kecamatan_id');
+    }
+
     public function media(): HasMany
     {
-        return $this->hasMany(LaporanMedia::class, 'laporan_id');
+        return $this->hasMany(LaporanMedia::class, 'laporan_id')->orderBy('urutan');
     }
 
     public function komentar(): HasMany
     {
-        return $this->hasMany(LaporanKomentar::class, 'laporan_id');
+        return $this->hasMany(LaporanKomentar::class, 'laporan_id')->orderBy('dibuat_pada');
     }
 }
