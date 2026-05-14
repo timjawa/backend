@@ -18,6 +18,7 @@ class LaporanKomentar extends Model
         'laporan_id',
         'user_id',
         'isi',
+        'dibuat_pada',
     ];
 
     protected function casts(): array

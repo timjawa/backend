@@ -98,7 +98,15 @@ class AuthFirebaseController extends Controller
                 ]);
             }
 
-            // 4. Buat Token Sanctum untuk sesi API lokal
+            // 4. Cek apakah akun aktif
+            if (!$user->is_active) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Akun Anda telah dinonaktifkan. Hubungi administrator.',
+                ], 403);
+            }
+
+            // 5. Buat Token Sanctum untuk sesi API lokal
             $token = $user->createToken('firebase_auth_token')->plainTextToken;
 
             return response()->json([

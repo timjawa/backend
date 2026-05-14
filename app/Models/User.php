@@ -106,7 +106,12 @@ class User extends Authenticatable
                 if (!$this->foto) {
                     return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random';
                 }
-                return asset('storage/' . $this->foto);
+                // Jika nilai foto sudah mengandung folder (misal: uploads/profil/xxx.jpg), gunakan langsung
+                if (str_contains($this->foto, '/')) {
+                    return asset('storage/' . $this->foto);
+                }
+                // Jika hanya nama file (misal: super-admin.jpg), tambahkan folder profil
+                return asset('storage/uploads/profil/' . $this->foto);
             }
         );
     }

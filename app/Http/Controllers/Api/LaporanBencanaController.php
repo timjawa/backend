@@ -50,6 +50,14 @@ class LaporanBencanaController extends Controller
             $query->where('kecamatan_id', $request->kecamatan_id);
         }
 
+        // Filter by date range (dibuat_pada)
+        if ($request->has('start_date') && $request->start_date) {
+            $query->whereDate('dibuat_pada', '>=', $request->start_date);
+        }
+        if ($request->has('end_date') && $request->end_date) {
+            $query->whereDate('dibuat_pada', '<=', $request->end_date);
+        }
+
         // Search by jenis_bencana, user name, or alamat
         if ($request->has('search') && $request->search) {
             $search = $request->search;
@@ -126,10 +134,12 @@ class LaporanBencanaController extends Controller
         // Upload foto jika ada
         if ($request->hasFile('foto')) {
             foreach ($request->file('foto') as $index => $file) {
-                $path = $file->store('laporan/foto', 'public');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('uploads/pengaduan', $filename, 'public');
+                
                 LaporanMedia::create([
                     'laporan_id' => $laporan->id,
-                    'url'        => Storage::url($path),
+                    'url'        => $filename,
                     'tipe'       => 'foto',
                     'urutan'     => $index,
                 ]);
@@ -138,10 +148,13 @@ class LaporanBencanaController extends Controller
 
         // Upload video jika ada
         if ($request->hasFile('video')) {
-            $path = $request->file('video')->store('laporan/video', 'public');
+            $file = $request->file('video');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('uploads/pengaduan', $filename, 'public');
+            
             LaporanMedia::create([
                 'laporan_id' => $laporan->id,
-                'url'        => Storage::url($path),
+                'url'        => $filename,
                 'tipe'       => 'video',
                 'urutan'     => 0,
             ]);
@@ -216,11 +229,12 @@ class LaporanBencanaController extends Controller
             'laporan_id' => $laporan->id,
             'user_id'    => $request->user()->id,
             'isi'        => $request->isi,
+            'dibuat_pada'=> now(),
         ]);
 
         return response()->json([
             'message' => 'Komentar berhasil ditambahkan.',
-            'data'    => $komentar->load('user'),
+            'data'    => $komentar->fresh()->load('user'),
         ], 201);
     }
 

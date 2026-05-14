@@ -70,7 +70,14 @@ class AuthController extends Controller
         // Check if user is active
         if (!$user->is_active) {
             return response()->json([
-                'message' => 'Akun Anda telah dinonaktifkan.',
+                'message' => 'Akun Anda telah dinonaktifkan. Hubungi administrator.',
+            ], 403);
+        }
+
+        // Hanya admin yang diizinkan login ke dashboard web
+        if (!in_array($user->role, ['admin_bpbd', 'super_admin'])) {
+            return response()->json([
+                'message' => 'Akses ditolak. Halaman ini hanya untuk Admin BPBD dan Super Admin.',
             ], 403);
         }
 
@@ -157,7 +164,7 @@ class AuthController extends Controller
             }
 
             // Store new photo
-            $path = $request->file('foto')->store('profiles', 'public');
+            $path = $request->file('foto')->store('uploads/profil', 'public');
             $user->foto = $path;
         }
 

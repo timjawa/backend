@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\KecamatanController;
 use App\Http\Controllers\Api\KontakDaruratController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\LaporanBencanaController;
+use App\Http\Controllers\Api\PenggunaController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -91,6 +92,30 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin/laporan')->group(f
     Route::post('/{id}/comment', [LaporanBencanaController::class, 'addComment']);
     Route::delete('/{id}',       [LaporanBencanaController::class, 'adminDestroy']);
 });
+
+// Admin only: manage users (pengguna)
+Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin/pengguna')->group(function () {
+    Route::get('/',              [PenggunaController::class, 'index']);
+    Route::get('/stats',         [PenggunaController::class, 'stats']);
+    Route::get('/{id}',          [PenggunaController::class, 'show']);
+    Route::put('/{id}/toggle-active', [PenggunaController::class, 'toggleActive']);
+});
+
+// =============================================
+// POS PENGUNGSIAN ROUTES
+// =============================================
+// Public: list & show
+Route::get('/pos-pengungsian',        [\App\Http\Controllers\Api\PosPengungsiController::class, 'index']);
+Route::get('/pos-pengungsian/stats',  [\App\Http\Controllers\Api\PosPengungsiController::class, 'stats']);
+Route::get('/pos-pengungsian/{id}',   [\App\Http\Controllers\Api\PosPengungsiController::class, 'show']);
+
+// Admin only: create, update, delete
+Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
+    Route::post('/pos-pengungsian',          [\App\Http\Controllers\Api\PosPengungsiController::class, 'store']);
+    Route::put('/pos-pengungsian/{id}',      [\App\Http\Controllers\Api\PosPengungsiController::class, 'update']);
+    Route::delete('/pos-pengungsian/{id}',   [\App\Http\Controllers\Api\PosPengungsiController::class, 'destroy']);
+});
+
 
 // =============================================
 // KONTAK DARURAT ROUTES
