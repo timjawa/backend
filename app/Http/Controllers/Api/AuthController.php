@@ -233,7 +233,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'email'    => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'device_name' => ['required', 'string'], // e.g., "iPhone 12", "Samsung Galaxy"
+            'device_name' => ['required', 'string'],
         ]);
 
         // Find the user by email
@@ -301,5 +301,42 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Logout dari semua perangkat berhasil.',
         ]);
+    }
+
+    public function forceResetPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email'        => ['required', 'string', 'email', 'exists:users,email'],
+            'new_password' => ['required', 'string', 'min:8'],
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
+
+        if ($user) {
+            $localAuth = UserAuth::where('user_id', $user->id)
+                            ->where('provider', 'local')
+                            ->first();
+
+            if ($localAuth) {
+                $localAuth->password = $validated['new_password'];
+                $localAuth->save();
+            } else {
+               UserAuth::create([
+                    'user_id'  => $user->id,
+                    'provider' => 'local',
+                    'password' => $validated['new_password'],
+                ]);
+            }
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Password berhasil disinkronkan ke Laravel.',
+            ]);
+        }
+
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'User tidak ditemukan.',
+        ], 404);
     }
 }

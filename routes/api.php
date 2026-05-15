@@ -23,6 +23,7 @@ Route::post('/login',    [AuthController::class, 'login']);
 
 // Mobile auth endpoints (token-based)
 Route::post('/mobile/login', [AuthController::class, 'loginMobile']);
+Route::post('/mobile/reset-password-force', [AuthController::class, 'forceResetPassword']);
 
 // =============================================
 // AUTH ROUTES (Protected)
