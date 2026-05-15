@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Models\LaporanBencana;
-use App\Models\Notifikasi;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -78,11 +77,6 @@ class User extends Authenticatable
     public function laporanBencana(): HasMany
     {
         return $this->hasMany(LaporanBencana::class, 'user_id');
-    }
-
-    public function notifikasi(): HasMany
-    {
-        return $this->hasMany(Notifikasi::class, 'user_id');
     }
 
     // =========================================

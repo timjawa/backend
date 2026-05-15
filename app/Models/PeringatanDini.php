@@ -20,13 +20,13 @@ class PeringatanDini extends Model
         'dibuat_oleh',
         'deskripsi',
         'tingkat_urgensi',
-        'berlaku_hingga',
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
-            'berlaku_hingga' => 'datetime',
+            'is_active' => 'boolean',
         ];
     }
 

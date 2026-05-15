@@ -7,7 +7,6 @@ use App\Models\PeringatanDini;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class PeringatanDiniController extends Controller
 {
@@ -24,6 +23,10 @@ class PeringatanDiniController extends Controller
                   });
         }
 
+        if ($request->filled('tingkat_urgensi') && $request->tingkat_urgensi !== 'all') {
+            $query->where('tingkat_urgensi', $request->tingkat_urgensi);
+        }
+
         $perPage = $request->input('per_page', 10);
         $data = $query->paginate($perPage);
 
@@ -36,7 +39,7 @@ class PeringatanDiniController extends Controller
             'kecamatan_id' => 'required|uuid|exists:kecamatan,id',
             'deskripsi' => 'required|string',
             'tingkat_urgensi' => 'required|in:rendah,sedang,tinggi,kritis',
-            'berlaku_hingga' => 'nullable|date',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -49,7 +52,7 @@ class PeringatanDiniController extends Controller
             'dibuat_oleh' => $request->user()->id ?? null, // Need user ID
             'deskripsi' => $request->deskripsi,
             'tingkat_urgensi' => $request->tingkat_urgensi,
-            'berlaku_hingga' => $request->berlaku_hingga ? Carbon::parse($request->berlaku_hingga) : null,
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
         return response()->json([
@@ -72,7 +75,7 @@ class PeringatanDiniController extends Controller
             'kecamatan_id' => 'required|uuid|exists:kecamatan,id',
             'deskripsi' => 'required|string',
             'tingkat_urgensi' => 'required|in:rendah,sedang,tinggi,kritis',
-            'berlaku_hingga' => 'nullable|date',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -83,7 +86,7 @@ class PeringatanDiniController extends Controller
             'kecamatan_id' => $request->kecamatan_id,
             'deskripsi' => $request->deskripsi,
             'tingkat_urgensi' => $request->tingkat_urgensi,
-            'berlaku_hingga' => $request->berlaku_hingga ? Carbon::parse($request->berlaku_hingga) : null,
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
         return response()->json([

@@ -8,15 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('peta_bencana_layer', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('nama_layer', 100);
-            $table->enum('tipe', ['titik_banjir', 'jalur_evakuasi', 'pos_pengungsian', 'pos_pemantauan', 'zona_rawan']);
-            $table->json('config')->nullable();
-            $table->boolean('is_visible')->default(true);
-            $table->smallInteger('urutan')->default(0);
-        });
-
         Schema::create('pos_pengungsian', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('nama');
@@ -42,6 +33,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('pos_pengungsian');
-        Schema::dropIfExists('peta_bencana_layer');
     }
 };

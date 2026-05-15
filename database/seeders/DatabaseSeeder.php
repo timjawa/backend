@@ -241,8 +241,8 @@ class DatabaseSeeder extends Seeder
                 'urutan' => 5
             ],
             [
-                'pertanyaan' => 'Apakah aplikasi dapat memberikan notifikasi peringatan banjir?',
-                'jawaban' => 'Ya, aplikasi Jesi dapat memberikan notifikasi peringatan dini kepada pengguna jika terdapat potensi banjir atau informasi bencana di wilayah sekitar. Notifikasi ini membantu pengguna agar dapat lebih siap menghadapi kemungkinan terjadinya bencana.',
+                'pertanyaan' => 'Apakah aplikasi dapat menampilkan peringatan banjir?',
+                'jawaban' => 'Ya, aplikasi Jesi dapat menampilkan informasi peringatan dini jika terdapat potensi banjir atau informasi bencana di wilayah sekitar. Informasi ini membantu pengguna agar dapat lebih siap menghadapi kemungkinan terjadinya bencana.',
                 'kategori' => 'peringatan',
                 'urutan' => 6
             ],
@@ -263,22 +263,6 @@ class DatabaseSeeder extends Seeder
                     'updated_at' => now()
                 ],
                 $faq
-            ));
-        }
-
-        // =============================================
-        // SEED PANDUAN BENCANA
-        // =============================================
-        $panduanBanjir = [
-            ['judul' => 'Persiapan Sebelum Banjir', 'fase' => 'sebelum', 'urutan' => 1, 'konten' => 'Siapkan tas darurat berisi dokumen penting.'],
-            ['judul' => 'Saat Terjadi Banjir', 'fase' => 'saat', 'urutan' => 2, 'konten' => 'Segera menuju tempat yang lebih tinggi.'],
-            ['judul' => 'Setelah Banjir Surut', 'fase' => 'setelah', 'urutan' => 3, 'konten' => 'Periksa kondisi rumah sebelum kembali.'],
-        ];
-
-        foreach ($panduanBanjir as $panduan) {
-            DB::table('panduan_bencana')->insert(array_merge(
-                ['id' => Str::uuid()->toString(), 'jenis_bencana' => 'banjir', 'is_active' => true, 'dibuat_pada' => now(), 'updated_at' => now()],
-                $panduan
             ));
         }
 

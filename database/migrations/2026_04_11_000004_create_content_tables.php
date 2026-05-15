@@ -50,24 +50,6 @@ return new class extends Migration
         });
 
         // =============================================
-        // TABEL PANDUAN_BENCANA
-        // =============================================
-        Schema::create('panduan_bencana', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('judul');
-            $table->longText('konten');
-            $table->enum('jenis_bencana', ['umum', 'banjir', 'longsor', 'kebakaran', 'angin_kencang', 'gempa'])->default('umum');
-            $table->enum('fase', ['sebelum', 'saat', 'setelah', 'cara_lapor']);
-            $table->string('foto', 512)->nullable();
-            $table->smallInteger('urutan')->default(0);
-            $table->boolean('is_active')->default(true);
-            $table->timestamp('dibuat_pada')->nullable()->useCurrent();
-            $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate()->useCurrent();
-
-            $table->index(['jenis_bencana', 'fase'], 'idx_panduan_jenis_fase');
-        });
-
-        // =============================================
         // TABEL FAQ
         // =============================================
         Schema::create('faq', function (Blueprint $table) {
@@ -88,7 +70,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('faq');
-        Schema::dropIfExists('panduan_bencana');
         Schema::dropIfExists('berita_tags');
         Schema::dropIfExists('berita');
     }

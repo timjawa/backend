@@ -83,11 +83,12 @@ class LaporanBencanaController extends Controller
     public function adminStats(): JsonResponse
     {
         $stats = [
-            'total' => LaporanBencana::where('is_draft', false)->count(),
-            'baru' => LaporanBencana::where('is_draft', false)->where('status', 'baru')->count(),
-            'diverifikasi' => LaporanBencana::where('is_draft', false)->where('status', 'diverifikasi')->count(),
-            'ditolak' => LaporanBencana::where('is_draft', false)->where('status', 'ditolak')->count(),
-            'selesai' => LaporanBencana::where('is_draft', false)->where('status', 'selesai')->count(),
+            'total'          => LaporanBencana::where('is_draft', false)->count(),
+            'baru'           => LaporanBencana::where('is_draft', false)->where('status', 'baru')->count(),
+            'diinvestigasi'  => LaporanBencana::where('is_draft', false)->where('status', 'diinvestigasi')->count(),
+            'diverifikasi'   => LaporanBencana::where('is_draft', false)->where('status', 'diverifikasi')->count(),
+            'ditolak'        => LaporanBencana::where('is_draft', false)->where('status', 'ditolak')->count(),
+            'selesai'        => LaporanBencana::where('is_draft', false)->where('status', 'selesai')->count(),
         ];
 
         return response()->json($stats);
@@ -188,7 +189,7 @@ class LaporanBencanaController extends Controller
     public function updateStatus(Request $request, string $id): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:baru,diverifikasi,ditolak,selesai',
+            'status' => 'required|in:baru,diinvestigasi,diverifikasi,ditolak,selesai',
         ]);
 
         if ($validator->fails()) {

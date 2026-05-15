@@ -121,62 +121,7 @@ class SampleDataSeeder extends Seeder
         $this->command->info('✅ Berhasil insert ' . count($komentarData) . ' data laporan_komentar.');
 
         // ============================================================
-        // 3. PETA BENCANA LAYER
-        // ============================================================
-        $this->command->info('📌 Menyemai peta_bencana_layer...');
-
-        $petaLayers = [
-            [
-                'nama_layer' => 'Titik Rawan Banjir Jember',
-                'tipe'       => 'titik_banjir',
-                'config'     => json_encode(['warna' => '#1565C0', 'ikon' => 'flood', 'opacity' => 0.8, 'cluster' => true]),
-                'is_visible' => true,
-                'urutan'     => 1,
-            ],
-            [
-                'nama_layer' => 'Jalur Evakuasi Utama',
-                'tipe'       => 'jalur_evakuasi',
-                'config'     => json_encode(['warna' => '#2E7D32', 'lebar_garis' => 3, 'opacity' => 0.9, 'putus_putus' => false]),
-                'is_visible' => true,
-                'urutan'     => 2,
-            ],
-            [
-                'nama_layer' => 'Pos Pengungsian Aktif',
-                'tipe'       => 'pos_pengungsian',
-                'config'     => json_encode(['warna' => '#F57F17', 'ikon' => 'shelter', 'opacity' => 1.0, 'tampilkan_kapasitas' => true]),
-                'is_visible' => true,
-                'urutan'     => 3,
-            ],
-            [
-                'nama_layer' => 'Pos Pemantauan TMA Sungai',
-                'tipe'       => 'pos_pemantauan',
-                'config'     => json_encode(['warna' => '#6A1B9A', 'ikon' => 'sensor', 'opacity' => 0.85, 'refresh_interval_detik' => 300]),
-                'is_visible' => true,
-                'urutan'     => 4,
-            ],
-            [
-                'nama_layer' => 'Zona Rawan Bencana Longsor',
-                'tipe'       => 'zona_rawan',
-                'config'     => json_encode(['warna' => '#B71C1C', 'opacity' => 0.35, 'isi' => true, 'label' => 'Zona Merah Longsor']),
-                'is_visible' => true,
-                'urutan'     => 5,
-            ],
-            [
-                'nama_layer' => 'Zona Rawan Banjir Pesisir Selatan',
-                'tipe'       => 'zona_rawan',
-                'config'     => json_encode(['warna' => '#0277BD', 'opacity' => 0.3, 'isi' => true, 'label' => 'Zona Potensi Banjir Rob']),
-                'is_visible' => false,
-                'urutan'     => 6,
-            ],
-        ];
-
-        foreach ($petaLayers as $layer) {
-            DB::table('peta_bencana_layer')->insert(array_merge(['id' => Str::uuid()->toString()], $layer));
-        }
-        $this->command->info('✅ Berhasil insert ' . count($petaLayers) . ' data peta_bencana_layer.');
-
-        // ============================================================
-        // 4. POS PENGUNGSIAN
+        // 3. POS PENGUNGSIAN
         // ============================================================
         $this->command->info('🏕️  Menyemai pos_pengungsian...');
 
@@ -281,49 +226,49 @@ class SampleDataSeeder extends Seeder
         $this->command->info('✅ Berhasil insert ' . count($posPengungsian) . ' data pos_pengungsian.');
 
         // ============================================================
-        // 5. PERINGATAN DINI
+        // 4. PERINGATAN DINI
         // ============================================================
         $this->command->info('⚠️  Menyemai peringatan_dini...');
 
         $peringatanList = [
             [
                 'kecamatan' => 'Panti', 'tingkat_urgensi' => 'kritis',
-                'berlaku_hingga' => $now->copy()->addHours(12),
+                'is_active' => true,
                 'deskripsi' => 'Intensitas hujan sangat tinggi diprediksi mengguyur Kecamatan Panti dan sekitarnya. Warga di sekitar lereng Gunung Argopuro diminta waspada terhadap potensi longsor dan banjir bandang. Hindari aktivitas di area sungai.',
             ],
             [
                 'kecamatan' => 'Tempurejo', 'tingkat_urgensi' => 'tinggi',
-                'berlaku_hingga' => $now->copy()->addHours(8),
+                'is_active' => true,
                 'deskripsi' => 'Debit Sungai Bedadung di wilayah Tempurejo terus meningkat. Tinggi muka air mencapai siaga 2. Warga di bantaran sungai diminta bersiap untuk evakuasi mandiri.',
             ],
             [
                 'kecamatan' => 'Ambulu', 'tingkat_urgensi' => 'tinggi',
-                'berlaku_hingga' => $now->copy()->addHours(24),
+                'is_active' => true,
                 'deskripsi' => 'Potensi banjir rob di kawasan pesisir Ambulu akibat gelombang tinggi dari Samudra Hindia. Nelayan dilarang melaut dan warga pesisir diminta menjauhi pantai.',
             ],
             [
                 'kecamatan' => 'Wuluhan', 'tingkat_urgensi' => 'sedang',
-                'berlaku_hingga' => $now->copy()->addHours(6),
+                'is_active' => true,
                 'deskripsi' => 'Curah hujan sedang terpantau di wilayah Wuluhan. Warga di area rawan banjir diminta memantau kondisi saluran air di sekitar rumah dan bersiap mengamankan barang berharga.',
             ],
             [
                 'kecamatan' => 'Puger', 'tingkat_urgensi' => 'sedang',
-                'berlaku_hingga' => $now->copy()->addHours(36),
+                'is_active' => true,
                 'deskripsi' => 'Gelombang laut di perairan Puger mencapai 2–3 meter. Aktivitas penangkapan ikan di laut lepas agar ditunda sementara hingga kondisi membaik.',
             ],
             [
                 'kecamatan' => 'Kaliwates', 'tingkat_urgensi' => 'rendah',
-                'berlaku_hingga' => $now->copy()->addHours(3),
+                'is_active' => true,
                 'deskripsi' => 'Peringatan potensi genangan air di beberapa titik Kecamatan Kaliwates akibat saluran drainase tersumbat. Mohon perhatian warga untuk tidak membuang sampah ke saluran air.',
             ],
             [
                 'kecamatan' => 'Silo', 'tingkat_urgensi' => 'tinggi',
-                'berlaku_hingga' => $now->copy()->addHours(18),
+                'is_active' => true,
                 'deskripsi' => 'Potensi tanah longsor di jalur perkebunan Kecamatan Silo. Pengguna jalan diminta berhati-hati dan menghindari parkir di tepi tebing saat hujan deras.',
             ],
             [
                 'kecamatan' => 'Rambipuji', 'tingkat_urgensi' => 'sedang',
-                'berlaku_hingga' => $now->copy()->addHours(9),
+                'is_active' => true,
                 'deskripsi' => 'Angin kencang diprediksi melanda Rambipuji pada sore dan malam hari. Waspadai pohon tumbang dan atap yang tidak terpasang kuat.',
             ],
         ];
@@ -344,80 +289,7 @@ class SampleDataSeeder extends Seeder
         $this->command->info('✅ Berhasil insert ' . count($peringatanList) . ' data peringatan_dini.');
 
         // ============================================================
-        // 6. NOTIFIKASI
-        // ============================================================
-        $this->command->info('🔔 Menyemai notifikasi...');
-
-        $peringatanIds  = DB::table('peringatan_dini')->pluck('id')->toArray();
-        $notifikasiData = [];
-
-        // Notifikasi peringatan_dini (random 60% user per peringatan)
-        foreach ($peringatanIds as $peringatanId) {
-            foreach ($userIds as $userId) {
-                if (rand(0, 9) >= 6) continue;
-                $notifikasiData[] = [
-                    'id'           => Str::uuid()->toString(),
-                    'user_id'      => $userId,
-                    'judul'        => 'Peringatan Dini Bencana',
-                    'pesan'        => 'BPBD Jember mengeluarkan peringatan dini untuk wilayah Anda. Harap tetap waspada dan ikuti instruksi petugas.',
-                    'tipe'         => 'peringatan_dini',
-                    'reference_id' => $peringatanId,
-                    'is_read'      => (bool) rand(0, 1),
-                    'dibuat_pada'  => $now->copy()->subMinutes(rand(5, 480)),
-                ];
-            }
-        }
-
-        // Notifikasi update_laporan (10 laporan pertama)
-        foreach (array_slice($laporanIds, 0, min(count($laporanIds), 10)) as $laporanId) {
-            $notifikasiData[] = [
-                'id'           => Str::uuid()->toString(),
-                'user_id'      => $userIds[array_rand($userIds)],
-                'judul'        => 'Status Laporan Diperbarui',
-                'pesan'        => 'Status laporan bencana yang Anda kirimkan telah diperbarui oleh petugas BPBD. Silakan cek detail laporan Anda.',
-                'tipe'         => 'update_laporan',
-                'reference_id' => $laporanId,
-                'is_read'      => false,
-                'dibuat_pada'  => $now->copy()->subMinutes(rand(10, 600)),
-            ];
-        }
-
-        // Notifikasi sistem, cuaca, dan poin
-        $notifSistem = [
-            ['judul' => 'Selamat Datang di Jember Siaga!', 'tipe' => 'sistem',
-             'pesan' => 'Akun Anda berhasil terdaftar di aplikasi Jember Siaga. Mulai pantau kondisi bencana di sekitar Anda.'],
-            ['judul' => 'Pembaruan Aplikasi Tersedia', 'tipe' => 'sistem',
-             'pesan' => 'Versi terbaru aplikasi Jember Siaga telah tersedia. Harap perbarui untuk mendapatkan fitur terkini dan perbaikan bug.'],
-            ['judul' => 'Cuaca Ekstrem Hari Ini', 'tipe' => 'info_cuaca',
-             'pesan' => 'BMKG memprediksi cuaca ekstrem di wilayah Jember hari ini. Waspadai hujan lebat disertai petir pada sore hingga malam hari.'],
-            ['judul' => 'Update Kondisi Banjir', 'tipe' => 'info_banjir',
-             'pesan' => 'Ketinggian air di Sungai Bedadung mulai surut. Warga yang mengungsi dapat kembali ke rumah setelah mendapat izin dari petugas.'],
-            ['judul' => 'Poin Reward Diterima', 'tipe' => 'poin',
-             'pesan' => 'Selamat! Laporan bencana Anda telah diverifikasi. Anda mendapatkan 50 poin kontribusi sebagai penghargaan.'],
-            ['judul' => 'Laporan Anda Diverifikasi', 'tipe' => 'update_laporan',
-             'pesan' => 'Laporan bencana yang Anda kirimkan telah berhasil diverifikasi oleh petugas BPBD Jember. Terima kasih atas kontribusi Anda!'],
-        ];
-
-        foreach ($notifSistem as $notif) {
-            $notifikasiData[] = [
-                'id'           => Str::uuid()->toString(),
-                'user_id'      => $userIds[array_rand($userIds)],
-                'judul'        => $notif['judul'],
-                'pesan'        => $notif['pesan'],
-                'tipe'         => $notif['tipe'],
-                'reference_id' => null,
-                'is_read'      => (bool) rand(0, 1),
-                'dibuat_pada'  => $now->copy()->subDays(rand(0, 7))->subHours(rand(0, 23)),
-            ];
-        }
-
-        foreach (array_chunk($notifikasiData, 50) as $chunk) {
-            DB::table('notifikasi')->insert($chunk);
-        }
-        $this->command->info('✅ Berhasil insert ' . count($notifikasiData) . ' data notifikasi.');
-
-        // ============================================================
-        // 7. BERITA + TAGS
+        // 5. BERITA + TAGS
         // ============================================================
         $this->command->info('📰 Menyemai berita...');
 
@@ -634,106 +506,6 @@ class SampleDataSeeder extends Seeder
         $this->command->info("✅ Berhasil insert {$jumlahBerita} data berita dan {$jumlahTags} tags.");
 
         // ============================================================
-        // 8. PANDUAN BENCANA
-        // ============================================================
-        $this->command->info('📖 Menyemai panduan_bencana...');
-
-        $panduanList = [
-            // --- SEBELUM TERJADI BANJIR ---
-            [
-                'judul'        => 'Sebelum Terjadi Banjir',
-                'fase'         => 'sebelum',
-                'jenis_bencana'=> 'banjir',
-                'urutan'       => 1,
-                'konten'       => "1. Ketahui wilayah-wilayah rawan bencana.\n2. Pantau risiko bencana di JeSi.\n3. Koordinasikan protokol bencana dengan tetangga.\n4. Dokumentasikan surat dan dokumen berharga dalam bentuk soft copy.\n5. Ketahui kebutuhan khusus anggota keluarga.",
-            ],
-            // --- KETIKA ADA POTENSI BANJIR ---
-            [
-                'judul'        => 'Ketika Ada Potensi Banjir',
-                'fase'         => 'sebelum',
-                'jenis_bencana'=> 'banjir',
-                'urutan'       => 2,
-                'konten'       => "1. Perhatikan informasi peringatan dini berupa notifikasi dari aplikasi JeSi ataupun media sosial.\n2. Amankan barang berharga ke tempat yang aman dan tinggi.\n3. Matikan jaringan listrik.\n4. Persiapkan tas siaga bencana.\n5. Ikuti arahan petugas.",
-            ],
-            // --- SAAT TERJADI BENCANA ---
-            [
-                'judul'        => 'Saat Terjadi Bencana',
-                'fase'         => 'saat',
-                'jenis_bencana'=> 'banjir',
-                'urutan'       => 3,
-                'konten'       => "1. Cari informasi dari sumber terpercaya.\n2. Laporkan kondisi bencana melalui menu pengaduan bencana melalui JeSi.\n3. Waspada terhadap arus air, pesisir pantai, dataran tinggi, dan saluran air.\n4. Bawa tas darurat.\n5. Tetap tenang dan menuju tempat aman atau titik evakuasi.",
-            ],
-            // --- SESUDAH TERJADI BENCANA ---
-            [
-                'judul'        => 'Sesudah Terjadi Bencana',
-                'fase'         => 'setelah',
-                'jenis_bencana'=> 'banjir',
-                'urutan'       => 4,
-                'konten'       => "1. Cari informasi kondisi saat ini dan tempat mendapatkan bantuan dari sumber terpercaya.\n2. Kembali ke rumah saat keadaan aman.\n3. Gunakan sepatu untuk melindungi kaki dari benda tajam seperti paku.\n4. Bersihkan lumpur.\n5. Periksa kondisi rumah.",
-            ],
-            // --- PERSIAPAN TAS SIAGA BENCANA ---
-            [
-                'judul'        => 'Persiapan Tas Siaga Bencana',
-                'fase'         => 'sebelum',
-                'jenis_bencana'=> 'umum',
-                'urutan'       => 5,
-                'konten'       => "1. Siapkan tas darurat yang mudah dibawa saat evakuasi.\n2. Masukkan dokumen penting dalam plastik.\n3. Sediakan makanan instan dan air minum secukupnya.\n4. Siapkan kotak P3K.\n5. Bawa senter, powerbank, dan pakaian ganti.",
-            ],
-            // --- KONTAK DAN BANTUAN DARURAT ---
-            [
-                'judul'        => 'Kontak dan Bantuan Darurat',
-                'fase'         => 'cara_lapor',
-                'jenis_bencana'=> 'umum',
-                'urutan'       => 6,
-                'konten'       => "1. Hubungi layanan darurat atau call center bencana.\n2. Laporkan kondisi lingkungan melalui Jesi.\n3. Cari lokasi posko pengungsian terdekat.\n4. Ikuti informasi resmi dari pemerintah atau petugas.\n5. Hindari menyebarkan informasi yang belum jelas kebenarannya.",
-            ],
-            // --- TAMBAHAN: panduan longsor ---
-            [
-                'judul'        => 'Sebelum Terjadi Longsor',
-                'fase'         => 'sebelum',
-                'jenis_bencana'=> 'longsor',
-                'urutan'       => 1,
-                'konten'       => "1. Kenali tanda-tanda alam potensi longsor: retakan tanah, suara gemuruh, pohon miring.\n2. Hindari mendirikan bangunan di lereng curam tanpa pondasi yang kuat.\n3. Lakukan penghijauan di lahan miring untuk mencegah erosi.\n4. Pantau informasi cuaca dan peringatan dini dari BPBD.\n5. Siapkan jalur dan titik evakuasi yang aman bersama warga sekitar.",
-            ],
-            [
-                'judul'        => 'Saat Terjadi Longsor',
-                'fase'         => 'saat',
-                'jenis_bencana'=> 'longsor',
-                'urutan'       => 2,
-                'konten'       => "1. Segera menjauh dari area longsor menuju tempat yang lebih tinggi dan aman.\n2. Jangan berdiri di tepi jurang atau tebing yang retak.\n3. Hindari melintasi jalan yang tertutup material longsor.\n4. Hubungi BPBD atau layanan darurat jika ada korban terjebak.\n5. Ikuti instruksi dan arahan petugas evakuasi.",
-            ],
-            // --- TAMBAHAN: panduan gempa ---
-            [
-                'judul'        => 'Saat Terjadi Gempa Bumi',
-                'fase'         => 'saat',
-                'jenis_bencana'=> 'gempa',
-                'urutan'       => 1,
-                'konten'       => "1. Jangan panik, tetap tenang dan lindungi kepala.\n2. Berlindung di bawah meja yang kokoh atau di sisi dalam dinding.\n3. Jauhi jendela, kaca, dan benda yang bisa jatuh.\n4. Jika di luar ruangan, jauhi pohon, tiang listrik, dan bangunan tinggi.\n5. Setelah guncangan berhenti, segera keluar dan menuju lapangan terbuka.",
-            ],
-            [
-                'judul'        => 'Sesudah Terjadi Gempa Bumi',
-                'fase'         => 'setelah',
-                'jenis_bencana'=> 'gempa',
-                'urutan'       => 2,
-                'konten'       => "1. Periksa kondisi diri dan anggota keluarga, berikan pertolongan pertama.\n2. Waspadai gempa susulan yang mungkin lebih besar.\n3. Periksa kondisi bangunan sebelum masuk kembali.\n4. Matikan listrik, gas, dan air jika ada kerusakan pada instalasi.\n5. Ikuti informasi resmi dari pemerintah dan jauhi area berbahaya.",
-            ],
-        ];
-
-        $jumlahPanduan = 0;
-        foreach ($panduanList as $panduan) {
-            DB::table('panduan_bencana')->insert(array_merge(
-                [
-                    'id'          => Str::uuid()->toString(),
-                    'is_active'   => true,
-                    'dibuat_pada' => $now,
-                    'updated_at'  => $now,
-                ],
-                $panduan
-            ));
-            $jumlahPanduan++;
-        }
-        $this->command->info("✅ Berhasil insert {$jumlahPanduan} data panduan_bencana.");
-
         $this->command->newLine();
         $this->command->info('🎉 SampleDataSeeder selesai!');
     }

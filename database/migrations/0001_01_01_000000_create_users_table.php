@@ -56,23 +56,6 @@ return new class extends Migration
         });
 
         // =============================================
-        // TABEL USER_DEVICE_TOKENS 
-        // =============================================
-        Schema::create('user_device_tokens', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id');
-            $table->string('token', 512);
-            $table->enum('platform', ['android', 'ios', 'web']);
-            $table->boolean('is_active')->default(true);
-            $table->timestamp('created_at')->nullable()->useCurrent();
-            $table->timestamp('last_used_at')->nullable()->useCurrentOnUpdate()->useCurrent();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->unique('token', 'uniq_token');
-            $table->index(['user_id', 'is_active'], 'idx_device_token_user');
-        });
-
-        // =============================================
         // Laravel system tables
         // =============================================
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -98,7 +81,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('user_device_tokens');
         Schema::dropIfExists('user_points');
         Schema::dropIfExists('user_auth');
         Schema::dropIfExists('users');

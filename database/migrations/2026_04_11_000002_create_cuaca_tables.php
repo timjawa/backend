@@ -97,35 +97,6 @@ return new class extends Migration
             END
         ');
 
-        // =============================================
-        // TABEL PREDIKSI_BANJIR
-        // =============================================
-        Schema::create('prediksi_banjir', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('kecamatan_id');
-            $table->dateTime('waktu_prediksi');
-            $table->decimal('skor_risiko', 5, 2)->nullable();
-            $table->enum('status', ['aman', 'waspada', 'siaga', 'bahaya'])->nullable();
-            $table->timestamp('created_at')->nullable()->useCurrent();
-
-            $table->foreign('kecamatan_id')->references('id')->on('kecamatan')->onDelete('cascade');
-            $table->index(['kecamatan_id', 'waktu_prediksi'], 'idx_prediksi_waktu');
-        });
-
-        // =============================================
-        // TABEL TINGGI_AIR
-        // =============================================
-        Schema::create('tinggi_air', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('kecamatan_id');
-            $table->string('nama_pos', 100)->nullable();
-            $table->decimal('tinggi_air', 6, 2)->nullable();
-            $table->enum('status', ['normal', 'siaga', 'waspada', 'bahaya'])->nullable();
-            $table->dateTime('waktu')->nullable();
-
-            $table->foreign('kecamatan_id')->references('id')->on('kecamatan')->onDelete('cascade');
-            $table->index(['kecamatan_id', 'waktu'], 'idx_tinggi_air_waktu');
-        });
     }
 
     /**
@@ -134,8 +105,6 @@ return new class extends Migration
     public function down(): void
     {
         DB::unprepared('DROP TRIGGER IF EXISTS after_insert_cuaca');
-        Schema::dropIfExists('tinggi_air');
-        Schema::dropIfExists('prediksi_banjir');
         Schema::dropIfExists('perkiraan_cuaca');
         Schema::dropIfExists('historical_cuaca');
         Schema::dropIfExists('cuaca_realtime');

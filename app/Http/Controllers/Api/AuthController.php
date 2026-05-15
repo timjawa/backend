@@ -99,10 +99,13 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login berhasil.',
             'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'role'       => $user->role,
+                'alamat'     => $user->alamat,
+                'no_telepon' => $user->no_telepon,
+                'foto_url'   => $user->foto_url,
             ],
         ]);
     }
@@ -149,12 +152,42 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $validatedData = $request->validate([
-            'name'       => ['sometimes', 'required', 'string', 'max:255'],
-            'alamat'     => ['sometimes', 'nullable', 'string'],
-            'no_telepon' => ['sometimes', 'nullable', 'string', 'max:20'],
-            'foto'       => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5120'], // Max 5MB
+        $request->validate([
+            'name'                  => ['sometimes', 'required', 'string', 'max:255'],
+            'alamat'                => ['sometimes', 'nullable', 'string'],
+            'no_telepon'            => ['sometimes', 'nullable', 'string', 'max:20'],
+            'foto'                  => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5120'],
+            'old_password'          => ['sometimes', 'nullable', 'string'],
+            'password'              => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed'],
         ]);
+
+        // Handle Password Change
+        if ($request->filled('password')) {
+            // Query langsung agar mendapatkan kolom password (tidak terpengaruh $hidden)
+            $localAuth = \App\Models\UserAuth::where('user_id', $user->id)
+                            ->where('provider', 'local')
+                            ->first();
+
+            // Pastikan user punya password lokal
+            if (!$localAuth) {
+                return response()->json([
+                    'message' => 'Akun ini tidak memiliki password lokal. Gunakan metode login lain.',
+                ], 422);
+            }
+
+            // Verifikasi password lama menggunakan getRawOriginal agar tidak terkena hidden
+            $hashedPassword = $localAuth->getRawOriginal('password') ?? $localAuth->getAttributes()['password'] ?? null;
+
+            if (!$request->filled('old_password') || !Hash::check($request->input('old_password'), $hashedPassword)) {
+                return response()->json([
+                    'message' => 'Password lama tidak sesuai.',
+                ], 422);
+            }
+
+            // Simpan password baru (cast 'hashed' di model UserAuth akan auto-hash)
+            $localAuth->password = $request->input('password');
+            $localAuth->save();
+        }
 
         // Handle Photo Upload
         if ($request->hasFile('foto')) {
@@ -168,8 +201,8 @@ class AuthController extends Controller
             $user->foto = $path;
         }
 
-        $user->name = $request->input('name', $user->name);
-        $user->alamat = $request->input('alamat', $user->alamat);
+        $user->name       = $request->input('name', $user->name);
+        $user->alamat     = $request->input('alamat', $user->alamat);
         $user->no_telepon = $request->input('no_telepon', $user->no_telepon);
         $user->save();
 

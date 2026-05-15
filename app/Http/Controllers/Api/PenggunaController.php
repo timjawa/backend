@@ -13,7 +13,8 @@ class PenggunaController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $allowedRoles = ['masyarakat', 'admin_bpbd'];
+        $query = User::query()->whereIn('role', $allowedRoles);
 
         // Pencarian (Search)
         if ($request->has('search') && $request->search != '') {
@@ -25,7 +26,12 @@ class PenggunaController extends Controller
         }
 
         // Filter Role
-        if ($request->has('role') && $request->role != 'all' && $request->role != '') {
+        if (
+            $request->has('role') &&
+            $request->role != 'all' &&
+            $request->role != '' &&
+            in_array($request->role, $allowedRoles, true)
+        ) {
             $query->where('role', $request->role);
         }
 
@@ -44,9 +50,10 @@ class PenggunaController extends Controller
      */
     public function stats()
     {
-        $total = User::count();
-        $aktif = User::where('is_active', true)->count();
-        $admin = User::whereIn('role', ['admin_bpbd', 'super_admin'])->count();
+        $allowedRoles = ['masyarakat', 'admin_bpbd'];
+        $total = User::whereIn('role', $allowedRoles)->count();
+        $aktif = User::whereIn('role', $allowedRoles)->where('is_active', true)->count();
+        $admin = User::where('role', 'admin_bpbd')->count();
         $masyarakat = User::where('role', 'masyarakat')->count();
 
         return response()->json([
@@ -109,7 +116,6 @@ class PenggunaController extends Controller
         // ── Statistik Laporan ────────────────────────────────────
         $totalLaporan    = \DB::table('laporan_bencana')->where('user_id', $id)->where('is_draft', 0)->count();
         $totalKomentar   = \DB::table('laporan_komentar')->where('user_id', $id)->count();
-        $notifBelumDibaca = \DB::table('notifikasi')->where('user_id', $id)->where('is_read', 0)->count();
 
         // ── Aktivitas Terbaru ─────────────────────────────────────
         // Laporan terbaru (5)
@@ -140,13 +146,6 @@ class PenggunaController extends Controller
             ->orderByDesc('created_at')
             ->limit(5)
             ->get(['id', 'points', 'type', 'description', 'created_at']);
-
-        // Notifikasi terbaru (5)
-        $notifikasi = \DB::table('notifikasi')
-            ->where('user_id', $id)
-            ->orderByDesc('dibuat_pada')
-            ->limit(5)
-            ->get(['id', 'judul', 'pesan', 'tipe', 'is_read', 'dibuat_pada']);
 
         // ── Gabungkan Feed Aktivitas ─────────────────────────────
         $feed = collect();
@@ -182,16 +181,6 @@ class PenggunaController extends Controller
             ]);
         }
 
-        foreach ($notifikasi as $n) {
-            $feed->push([
-                'id'      => 'notif-' . $n->id,
-                'tipe'    => 'notifikasi',
-                'judul'   => $n->judul,
-                'deskripsi' => \Str::limit($n->pesan, 70),
-                'waktu'   => $n->dibuat_pada,
-            ]);
-        }
-
         // Sort feed by waktu desc, ambil 10 teratas
         $feedSorted = $feed->sortByDesc('waktu')->values()->take(10);
 
@@ -204,10 +193,8 @@ class PenggunaController extends Controller
             'stats'  => [
                 'total_laporan'               => $totalLaporan,
                 'total_komentar'              => $totalKomentar,
-                'notifikasi_belum_dibaca'     => $notifBelumDibaca,
             ],
             'aktivitas' => $feedSorted,
         ]);
     }
 }
-

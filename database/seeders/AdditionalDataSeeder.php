@@ -46,16 +46,6 @@ class AdditionalDataSeeder extends Seeder
                     'dibuat_pada' => now(),
                 ]);
             }
-
-            // Tinggi Air
-            DB::table('tinggi_air')->insert([
-                'id' => (string) Str::uuid(),
-                'kecamatan_id' => $kec->id,
-                'nama_pos' => 'Pos Pantau ' . $kec->nama,
-                'tinggi_air' => rand(50, 150) / 100,
-                'status' => 'normal',
-                'waktu' => now(),
-            ]);
         }
 
         // =============================================

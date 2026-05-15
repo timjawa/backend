@@ -16,28 +16,13 @@ return new class extends Migration
             $table->uuid('dibuat_oleh');
             $table->text('deskripsi')->nullable();
             $table->enum('tingkat_urgensi', ['rendah', 'sedang', 'tinggi', 'kritis'])->default('rendah');
-            $table->timestamp('berlaku_hingga')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamp('created_at')->nullable()->useCurrent();
 
             $table->foreign('kecamatan_id')->references('id')->on('kecamatan')->onDelete('cascade');
             $table->foreign('dibuat_oleh')->references('id')->on('users')->onDelete('cascade');
             $table->index('kecamatan_id');
             $table->index('dibuat_oleh');
-        });
-
-        // TABEL NOTIFIKASI
-        Schema::create('notifikasi', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('user_id');
-            $table->string('judul');
-            $table->text('pesan');
-            $table->enum('tipe', ['peringatan_dini', 'update_laporan', 'info_cuaca', 'info_banjir', 'sistem', 'poin'])->default('sistem');
-            $table->uuid('reference_id')->nullable();
-            $table->boolean('is_read')->default(false);
-            $table->timestamp('dibuat_pada')->nullable()->useCurrent();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->index(['user_id', 'is_read'], 'idx_notif_user');
         });
 
         // TABEL KONTAK_DARURAT
@@ -81,7 +66,6 @@ return new class extends Migration
         DB::unprepared('DROP TRIGGER IF EXISTS after_insert_point');
         Schema::dropIfExists('point_transactions');
         Schema::dropIfExists('kontak_darurat');
-        Schema::dropIfExists('notifikasi');
         Schema::dropIfExists('peringatan_dini');
     }
 };
