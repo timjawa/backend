@@ -167,8 +167,8 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
 // =============================================
 Route::get('/weather/realtime', [\App\Http\Controllers\WeatherController::class, 'getRealtime']);
 Route::get('/weather/forecast', [\App\Http\Controllers\WeatherController::class, 'getForecast']);
-Route::get('/weather/forecast-summary', [\App\Http\Controllers\WeatherController::class, 'getForecastSummary']);
 Route::get('/weather/historical', [\App\Http\Controllers\WeatherController::class, 'getHistorical']);
+Route::get('/weather/by-date', [\App\Http\Controllers\WeatherController::class, 'getWeatherByDate']);
 
 // Admin only: refresh weather
 Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
