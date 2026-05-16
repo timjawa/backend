@@ -15,18 +15,43 @@ class BeritaController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Berita::published()
-            ->with(['author:id,name', 'tags:id,berita_id,tag'])
-            ->orderByDesc('dipublikasi_pada');
+        $query = Berita::with(['author:id,name', 'tags:id,berita_id,tag'])
+            ->orderByDesc('dibuat_pada');
 
-        // Optional: filter by kategori
-        if ($request->has('kategori')) {
+        // Filter by search (judul)
+        if ($request->filled('search')) {
+            $query->where('judul', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by status (draft, published, archived)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        } else if (!$request->has('admin')) {
+            // Default public only see published
+            $query->published();
+        }
+
+        // Filter by kategori
+        if ($request->filled('kategori')) {
             $query->byKategori($request->kategori);
         }
 
-        $berita = $query->paginate(10);
+        $berita = $query->paginate($request->get('per_page', 10));
 
         return response()->json($berita);
+    }
+
+    /**
+     * Get statistics for news (total, published, draft, archived).
+     */
+    public function stats(): JsonResponse
+    {
+        return response()->json([
+            'total' => Berita::count(),
+            'published' => Berita::where('status', 'published')->count(),
+            'draft' => Berita::where('status', 'draft')->count(),
+            'archived' => Berita::where('status', 'archived')->count(),
+        ]);
     }
 
     /**

@@ -49,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // BERITA ROUTES
 // =============================================
 // Public: list & show
+Route::get('/berita/stats', [BeritaController::class, 'stats']);
 Route::get('/berita',      [BeritaController::class, 'index']);
 Route::get('/berita/{id}', [BeritaController::class, 'show']);
 
