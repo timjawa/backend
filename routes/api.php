@@ -98,6 +98,7 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin/laporan')->group(f
 // Admin only: manage users (pengguna)
 Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin/pengguna')->group(function () {
     Route::get('/',              [PenggunaController::class, 'index']);
+    Route::post('/',             [PenggunaController::class, 'store']);
     Route::get('/stats',         [PenggunaController::class, 'stats']);
     Route::get('/{id}',          [PenggunaController::class, 'show']);
     Route::put('/{id}/toggle-active', [PenggunaController::class, 'toggleActive']);

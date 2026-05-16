@@ -25,6 +25,14 @@ class AuthController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
+        ], [
+            'name.required' => 'Nama wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal harus 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
         // Create user in `users` table
@@ -56,6 +64,10 @@ class AuthController extends Controller
         $validated = $request->validate([
             'email'    => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password wajib diisi.',
         ]);
 
         // Find the user by email
@@ -159,6 +171,16 @@ class AuthController extends Controller
             'foto'                  => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5120'],
             'old_password'          => ['sometimes', 'nullable', 'string'],
             'password'              => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed'],
+        ], [
+            'name.required' => 'Nama wajib diisi.',
+            'name.string' => 'Nama harus berupa string.',
+            'name.max' => 'Nama maksimal 255 karakter.',
+            'no_telepon.max' => 'Nomor telepon maksimal 20 karakter.',
+            'foto.image' => 'Berkas harus berupa gambar.',
+            'foto.mimes' => 'Format foto harus jpeg, png, atau jpg.',
+            'foto.max' => 'Ukuran foto maksimal 5MB.',
+            'password.min' => 'Password minimal harus 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
         // Handle Password Change

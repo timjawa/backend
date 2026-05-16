@@ -46,6 +46,62 @@ class PenggunaController extends Controller
     }
 
     /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6|confirmed',
+            'no_telepon' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+        ], [
+            'name.required' => 'Nama wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal harus 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'foto.image' => 'Berkas harus berupa gambar.',
+            'foto.mimes' => 'Format foto harus jpeg, png, atau jpg.',
+            'foto.max' => 'Ukuran foto maksimal 5MB.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('uploads/profil', 'public');
+        }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => \Hash::make($request->password),
+            'role' => 'admin_bpbd',
+            'is_active' => true,
+            'no_telepon' => $request->no_telepon,
+            'alamat' => $request->alamat,
+            'foto' => $fotoPath,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Admin BPBD berhasil ditambahkan',
+            'data' => $user
+        ], 201);
+    }
+
+    /**
      * Get user statistics.
      */
     public function stats()
