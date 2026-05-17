@@ -179,3 +179,17 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
 // FIREBASE AUTH ROUTES (Public)
 // =============================================
 Route::post('/auth/firebase', [\App\Http\Controllers\Api\AuthFirebaseController::class, 'verifyFirebase']);
+
+// =============================================
+// PETA MARKER ROUTES
+// =============================================
+// Public: ambil semua marker aktif
+Route::get('/peta-marker', [\App\Http\Controllers\Api\PetaMarkerController::class, 'index']);
+
+// Admin only: tambah, edit, hapus marker
+Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin/peta-marker')->group(function () {
+    Route::get('/',        [\App\Http\Controllers\Api\PetaMarkerController::class, 'adminIndex']);
+    Route::post('/',       [\App\Http\Controllers\Api\PetaMarkerController::class, 'store']);
+    Route::put('/{id}',    [\App\Http\Controllers\Api\PetaMarkerController::class, 'update']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\PetaMarkerController::class, 'destroy']);
+});
