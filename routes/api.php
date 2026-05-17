@@ -98,6 +98,7 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin/laporan')->group(f
 // Admin only: manage users (pengguna)
 Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin/pengguna')->group(function () {
     Route::get('/',              [PenggunaController::class, 'index']);
+    Route::post('/',             [PenggunaController::class, 'store']);
     Route::get('/stats',         [PenggunaController::class, 'stats']);
     Route::get('/{id}',          [PenggunaController::class, 'show']);
     Route::put('/{id}/toggle-active', [PenggunaController::class, 'toggleActive']);
@@ -166,8 +167,8 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
 // =============================================
 Route::get('/weather/realtime', [\App\Http\Controllers\WeatherController::class, 'getRealtime']);
 Route::get('/weather/forecast', [\App\Http\Controllers\WeatherController::class, 'getForecast']);
-Route::get('/weather/forecast-summary', [\App\Http\Controllers\WeatherController::class, 'getForecastSummary']);
 Route::get('/weather/historical', [\App\Http\Controllers\WeatherController::class, 'getHistorical']);
+Route::get('/weather/by-date', [\App\Http\Controllers\WeatherController::class, 'getWeatherByDate']);
 
 // Admin only: refresh weather
 Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {

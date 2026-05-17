@@ -7,7 +7,7 @@ use App\Models\Kecamatan;
 use App\Models\CuacaRealtime;
 use App\Models\PerkiraanCuaca;
 use App\Models\HistoricalCuaca;
-use App\Models\RingkasanCuacaHarian;
+
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Client\Pool;
@@ -68,6 +68,80 @@ class WeatherController extends Controller
             'data' => $result
         ]);
     }
+
+    /**
+     * Smart endpoint: returns weather data for a specific date.
+     * - If date >= today → uses perkiraan_cuaca (BMKG forecast)
+     * - If date < today → uses historical_cuaca (recorded history)
+     * Returns data grouped by kecamatan in a unified format.
+     */
+    public function getWeatherByDate(Request $request)
+    {
+        $date = $request->query('date', now()->format('Y-m-d'));
+        $today = now()->format('Y-m-d');
+
+        if ($date >= $today) {
+            // === FORECAST MODE: use perkiraan_cuaca ===
+            $data = PerkiraanCuaca::with('kecamatan:id,nama')
+                ->whereDate('waktu_lokal', $date)
+                ->orderBy('waktu_lokal')
+                ->get();
+
+            $grouped = $data->groupBy(fn($item) => $item->kecamatan->nama ?? 'Unknown');
+
+            return response()->json([
+                'status' => 'success',
+                'source' => 'forecast',
+                'date' => $date,
+                'data' => $grouped
+            ]);
+        } else {
+            // === HISTORICAL MODE: use historical_cuaca ===
+            $data = HistoricalCuaca::with('kecamatan:id,nama')
+                ->whereDate('waktu', $date)
+                ->orderBy('waktu')
+                ->get();
+
+            // Normalize to match forecast format
+            $grouped = $data->groupBy(fn($item) => $item->kecamatan->nama ?? 'Unknown');
+
+            $normalizedGrouped = [];
+            foreach ($grouped as $kecName => $records) {
+                $normalizedGrouped[$kecName] = $records->map(function ($record) {
+                    // Derive weather description from cloud_cover and curah_hujan
+                    $cloudCover = $record->cloud_cover ?? 0;
+                    $curahHujan = $record->curah_hujan ?? 0;
+                    $deskripsi = 'Cerah';
+                    if ($curahHujan > 5) {
+                        $deskripsi = 'Hujan Sedang';
+                    } elseif ($curahHujan > 0) {
+                        $deskripsi = 'Hujan Ringan';
+                    } elseif ($cloudCover >= 75) {
+                        $deskripsi = 'Berawan';
+                    } elseif ($cloudCover >= 40) {
+                        $deskripsi = 'Cerah Berawan';
+                    }
+
+                    return [
+                        'waktu_lokal' => $record->waktu,
+                        'suhu' => $record->suhu,
+                        'kelembapan' => $record->kelembapan,
+                        'curah_hujan' => $record->curah_hujan,
+                        'cloud_cover' => $record->cloud_cover,
+                        'kecepatan_angin' => null,
+                        'deskripsi_cuaca' => $deskripsi,
+                    ];
+                })->values();
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'source' => 'historical',
+                'date' => $date,
+                'data' => $normalizedGrouped
+            ]);
+        }
+    }
     public function getRealtime()
     {
         // Cek data terakhir
@@ -91,9 +165,6 @@ class WeatherController extends Controller
     {
         // Force fetch from API and archive old data
         $this->fetchOpenWeather();
-
-        // Auto-generate ringkasan harian (jika belum ada)
-        $this->generateRingkasanHarian();
 
         // Ambil data terbaru yang baru di-fetch
         $data = CuacaRealtime::with('kecamatan:id,nama')->get();
@@ -134,9 +205,6 @@ class WeatherController extends Controller
         // Force fetch from BMKG API
         $this->fetchBMKG();
 
-        // Auto-generate ringkasan harian dari data prakiraan yang baru
-        $this->generateRingkasanHarian();
-
         // Ambil data terbaru yang baru di-fetch
         $data = PerkiraanCuaca::with('kecamatan:id,nama')->orderBy('waktu_lokal')->get();
 
@@ -147,51 +215,7 @@ class WeatherController extends Controller
         ]);
     }
 
-    /**
-     * Generate ringkasan harian dari data perkiraan_cuaca.
-     * Menghitung suhu rata-rata dan total curah hujan per hari per kecamatan,
-     * lalu simpan ke tabel ringkasan_cuaca_harian (jika data hari tersebut belum ada).
-     */
-    private function generateRingkasanHarian()
-    {
-        $summaries = DB::table('perkiraan_cuaca')
-            ->select(
-                'kecamatan_id',
-                DB::raw('DATE(waktu_lokal) as tanggal'),
-                DB::raw('ROUND(AVG(suhu), 1) as suhu_rata'),
-                DB::raw('ROUND(SUM(COALESCE(curah_hujan, 0)), 2) as curah_hujan')
-            )
-            ->groupBy('kecamatan_id', DB::raw('DATE(waktu_lokal)'))
-            ->get();
 
-        foreach ($summaries as $row) {
-            RingkasanCuacaHarian::firstOrCreate(
-                [
-                    'kecamatan_id' => $row->kecamatan_id,
-                    'tanggal' => $row->tanggal,
-                ],
-                [
-                    'suhu_rata' => $row->suhu_rata,
-                    'curah_hujan' => $row->curah_hujan,
-                ]
-            );
-        }
-    }
-
-    /**
-     * Get daily weather summary from ringkasan_cuaca_harian table.
-     */
-    public function getForecastSummary()
-    {
-        $data = RingkasanCuacaHarian::with('kecamatan:id,nama')
-            ->orderBy('tanggal')
-            ->get();
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $data
-        ]);
-    }
 
     private function fetchOpenWeather()
     {
@@ -295,10 +319,11 @@ class WeatherController extends Controller
                     // cuacaDays adalah array of arrays (dikelompokkan per hari)
                     foreach ($cuacaDays as $dayCuaca) {
                         foreach ($dayCuaca as $cuaca) {
+                            $waktuLokal = isset($cuaca['local_datetime']) ? date('Y-m-d H:i:s', strtotime($cuaca['local_datetime'])) : $now;
+                            
                             $records[] = [
-                                'id' => Str::uuid()->toString(),
                                 'kecamatan_id' => $kecamatanId,
-                                'waktu_lokal' => isset($cuaca['local_datetime']) ? date('Y-m-d H:i:s', strtotime($cuaca['local_datetime'])) : $now,
+                                'waktu_lokal' => $waktuLokal,
                                 'suhu' => $cuaca['t'] ?? null,
                                 'kelembapan' => $cuaca['hu'] ?? null,
                                 'curah_hujan' => $cuaca['tp'] ?? null,
@@ -317,14 +342,23 @@ class WeatherController extends Controller
         }
 
         if (!empty($records)) {
-            // Hapus data lama agar tidak menumpuk, karena trigger akan mengarsipkan
-            PerkiraanCuaca::truncate();
-
-            // Insert dalam batch agar memori tidak penuh
+            // Gunakan upsert: update data yang sudah ada, insert yang baru
+            // Key unik: kecamatan_id + waktu_lokal
             $chunks = array_chunk($records, 500);
             foreach ($chunks as $chunk) {
-                PerkiraanCuaca::insert($chunk);
+                foreach ($chunk as $record) {
+                    PerkiraanCuaca::updateOrCreate(
+                        [
+                            'kecamatan_id' => $record['kecamatan_id'],
+                            'waktu_lokal' => $record['waktu_lokal'],
+                        ],
+                        $record
+                    );
+                }
             }
+
+            // Hapus data yang sudah lewat lebih dari 3 hari agar tidak menumpuk
+            PerkiraanCuaca::where('waktu_lokal', '<', Carbon::now()->subDays(3))->delete();
         }
     }
 }
