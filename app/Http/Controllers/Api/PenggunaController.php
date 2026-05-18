@@ -86,12 +86,17 @@ class PenggunaController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => \Hash::make($request->password),
             'role' => 'admin_bpbd',
             'is_active' => true,
             'no_telepon' => $request->no_telepon,
             'alamat' => $request->alamat,
             'foto' => $fotoPath,
+        ]);
+
+        \App\Models\UserAuth::create([
+            'user_id' => $user->id,
+            'provider' => 'local',
+            'password' => $request->password,
         ]);
 
         return response()->json([

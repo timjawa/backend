@@ -18,13 +18,17 @@ class PeringatanDiniController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where('deskripsi', 'like', "%{$search}%")
-                  ->orWhereHas('kecamatan', function($q) use ($search) {
-                      $q->where('nama', 'like', "%{$search}%");
-                  });
+                ->orWhereHas('kecamatan', function ($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%");
+                });
         }
 
         if ($request->filled('tingkat_urgensi') && $request->tingkat_urgensi !== 'all') {
             $query->where('tingkat_urgensi', $request->tingkat_urgensi);
+        }
+
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
         }
 
         $perPage = $request->input('per_page', 10);

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LaporanKomentar extends Model
 {
@@ -17,6 +18,7 @@ class LaporanKomentar extends Model
     protected $fillable = [
         'laporan_id',
         'user_id',
+        'parent_id',
         'isi',
         'dibuat_pada',
     ];
@@ -36,5 +38,15 @@ class LaporanKomentar extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(LaporanKomentar::class, 'parent_id');
+    }
+
+    public function replies(): HasMany
+    {
+        return $this->hasMany(LaporanKomentar::class, 'parent_id')->with('user')->orderBy('dibuat_pada');
     }
 }

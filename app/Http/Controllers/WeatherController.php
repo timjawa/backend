@@ -7,6 +7,7 @@ use App\Models\Kecamatan;
 use App\Models\CuacaRealtime;
 use App\Models\PerkiraanCuaca;
 use App\Models\HistoricalCuaca;
+use App\Models\RingkasanHistoricalCuaca;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
@@ -19,48 +20,26 @@ class WeatherController extends Controller
     public function getHistorical(Request $request)
     {
         $kecamatanId = $request->query('kecamatan_id');
-        
-        $query = HistoricalCuaca::with('kecamatan:id,nama')
-            ->where('waktu', '>=', Carbon::now()->subDays(7));
+
+        $summaryQuery = RingkasanHistoricalCuaca::with('kecamatan:id,nama')
+            ->where('tanggal', '>=', Carbon::now()->subDays(7)->toDateString());
 
         if ($kecamatanId) {
-            $query->where('kecamatan_id', $kecamatanId);
+            $summaryQuery->where('kecamatan_id', $kecamatanId);
         }
 
-        $data = $query->orderBy('waktu', 'asc')->get();
+        $summaries = $summaryQuery->orderBy('tanggal', 'asc')->get();
 
-        // Kelompokkan per kecamatan
-        $grouped = $data->groupBy(function($item) {
-            return $item->kecamatan->nama;
-        });
-
-        // Hitung rata-rata per hari per kecamatan
         $result = [];
-        foreach ($grouped as $kecamatan => $records) {
-            $dailyAvg = [];
-            foreach ($records as $record) {
-                $date = Carbon::parse($record->waktu)->format('Y-m-d');
-                if (!isset($dailyAvg[$date])) {
-                    $dailyAvg[$date] = [
-                        'suhu_total' => 0,
-                        'hujan_total' => 0,
-                        'count' => 0,
-                    ];
-                }
-                $dailyAvg[$date]['suhu_total'] += $record->suhu;
-                $dailyAvg[$date]['hujan_total'] += $record->curah_hujan ?? 0;
-                $dailyAvg[$date]['count']++;
-            }
-
-            $formattedDaily = [];
-            foreach ($dailyAvg as $date => $stats) {
-                $formattedDaily[] = [
-                    'tanggal' => $date,
-                    'suhu_avg' => round($stats['suhu_total'] / $stats['count'], 1),
-                    'hujan_avg' => round($stats['hujan_total'] / $stats['count'], 1),
-                ];
-            }
-            $result[$kecamatan] = $formattedDaily;
+        foreach ($summaries->groupBy(fn ($item) => $item->kecamatan->nama ?? 'Unknown') as $kecamatan => $records) {
+            $result[$kecamatan] = $records->map(fn ($record) => [
+                'tanggal' => Carbon::parse($record->tanggal)->format('Y-m-d'),
+                'suhu_avg' => (float) $record->suhu_rata,
+                'hujan_avg' => (float) $record->curah_hujan_rata,
+                'kelembapan_avg' => (float) $record->kelembapan_rata,
+                'cloud_cover_avg' => (float) $record->cloud_cover_rata,
+                'jumlah_data' => $record->jumlah_data,
+            ])->values();
         }
 
         return response()->json([
@@ -69,12 +48,6 @@ class WeatherController extends Controller
         ]);
     }
 
-    /**
-     * Smart endpoint: returns weather data for a specific date.
-     * - If date >= today → uses perkiraan_cuaca (BMKG forecast)
-     * - If date < today → uses historical_cuaca (recorded history)
-     * Returns data grouped by kecamatan in a unified format.
-     */
     public function getWeatherByDate(Request $request)
     {
         $date = $request->query('date', now()->format('Y-m-d'));
@@ -97,6 +70,48 @@ class WeatherController extends Controller
             ]);
         } else {
             // === HISTORICAL MODE: use historical_cuaca ===
+            $summaries = RingkasanHistoricalCuaca::with('kecamatan:id,nama')
+                ->whereDate('tanggal', $date)
+                ->get();
+
+            if ($summaries->isNotEmpty()) {
+                $summaryGrouped = [];
+                foreach ($summaries->groupBy(fn ($item) => $item->kecamatan->nama ?? 'Unknown') as $kecName => $records) {
+                    $summaryGrouped[$kecName] = $records->map(function ($record) {
+                        $cloudCover = (float) ($record->cloud_cover_rata ?? 0);
+                        $curahHujan = (float) ($record->curah_hujan_rata ?? 0);
+                        $deskripsi = 'Cerah';
+                        if ($curahHujan > 5) {
+                            $deskripsi = 'Hujan Sedang';
+                        } elseif ($curahHujan > 0) {
+                            $deskripsi = 'Hujan Ringan';
+                        } elseif ($cloudCover >= 75) {
+                            $deskripsi = 'Berawan';
+                        } elseif ($cloudCover >= 40) {
+                            $deskripsi = 'Cerah Berawan';
+                        }
+
+                        return [
+                            'waktu_lokal' => Carbon::parse($record->tanggal)->setTime(12, 0),
+                            'suhu' => $record->suhu_rata,
+                            'kelembapan' => $record->kelembapan_rata,
+                            'curah_hujan' => $record->curah_hujan_rata,
+                            'cloud_cover' => $record->cloud_cover_rata,
+                            'kecepatan_angin' => null,
+                            'deskripsi_cuaca' => $deskripsi,
+                            'jumlah_data' => $record->jumlah_data,
+                        ];
+                    })->values();
+                }
+
+                return response()->json([
+                    'status' => 'success',
+                    'source' => 'historical_summary',
+                    'date' => $date,
+                    'data' => $summaryGrouped
+                ]);
+            }
+
             $data = HistoricalCuaca::with('kecamatan:id,nama')
                 ->whereDate('waktu', $date)
                 ->orderBy('waktu')
