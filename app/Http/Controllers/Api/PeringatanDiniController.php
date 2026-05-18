@@ -27,6 +27,10 @@ class PeringatanDiniController extends Controller
             $query->where('tingkat_urgensi', $request->tingkat_urgensi);
         }
 
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
+        }
+
         $perPage = $request->input('per_page', 10);
         $data = $query->paginate($perPage);
 
