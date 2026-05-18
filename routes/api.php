@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/laporan',       [LaporanBencanaController::class, 'index']);
     Route::post('/laporan',      [LaporanBencanaController::class, 'store']);
     Route::get('/laporan/{id}',  [LaporanBencanaController::class, 'show']);
+    Route::post('/laporan/{id}', [LaporanBencanaController::class, 'update']);
 });
 
 // =============================================
@@ -83,6 +84,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/laporan',      [LaporanBencanaController::class, 'index']);
     Route::post('/laporan',      [LaporanBencanaController::class, 'store']);
     Route::get('/laporan/{id}', [LaporanBencanaController::class, 'show']);
+    Route::post('/laporan/{id}/comment', [LaporanBencanaController::class, 'addComment']);
 });
 
 // Admin only: manage all laporan
