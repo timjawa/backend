@@ -82,7 +82,7 @@ class BeritaController extends Controller
         // Handle upload foto_cover
         if ($request->hasFile('foto_cover')) {
             $path = $request->file('foto_cover')->store('uploads/berita', 'public');
-            $validated['foto_cover'] = $path;
+            $validated['foto_cover'] = basename($path); // Simpan nama filenya saja
         }
 
         $berita = Berita::create($validated);
@@ -113,6 +113,9 @@ class BeritaController extends Controller
         $berita = Berita::with(['author:id,name', 'tags:id,berita_id,tag'])
             ->findOrFail($id);
 
+        // Increment the view counter by 1 on every access
+        $berita->increment('views_count');
+
         return response()->json(['berita' => $berita]);
     }
 
@@ -137,11 +140,13 @@ class BeritaController extends Controller
 
         if ($request->hasFile('foto_cover')) {
             // Hapus file foto lama dari storage agar "clean" (tidak menumpuk sampah)
-            if ($berita->foto_cover && Storage::disk('public')->exists($berita->foto_cover)) {
-                Storage::disk('public')->delete($berita->foto_cover);
+            $oldFile = 'uploads/berita/' . basename($berita->foto_cover);
+            if ($berita->foto_cover && Storage::disk('public')->exists($oldFile)) {
+                Storage::disk('public')->delete($oldFile);
             }
             
-            $validated['foto_cover'] = $request->file('foto_cover')->store('uploads/berita', 'public');
+            $path = $request->file('foto_cover')->store('uploads/berita', 'public');
+            $validated['foto_cover'] = basename($path); // Simpan nama filenya saja
         } else {
             // Jika tidak ada file baru, hapus dari validated agar tidak menimpa data lama dengan null
             unset($validated['foto_cover']);
@@ -181,8 +186,11 @@ class BeritaController extends Controller
         $berita = Berita::findOrFail($id);
         
         // Hapus file fisik foto dari storage agar "clean"
-        if ($berita->foto_cover && Storage::disk('public')->exists($berita->foto_cover)) {
-            Storage::disk('public')->delete($berita->foto_cover);
+        if ($berita->foto_cover) {
+            $oldFile = 'uploads/berita/' . basename($berita->foto_cover);
+            if (Storage::disk('public')->exists($oldFile)) {
+                Storage::disk('public')->delete($oldFile);
+            }
         }
         
         $berita->delete();
