@@ -18,9 +18,9 @@ class PeringatanDiniController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where('deskripsi', 'like', "%{$search}%")
-                  ->orWhereHas('kecamatan', function($q) use ($search) {
-                      $q->where('nama', 'like', "%{$search}%");
-                  });
+                ->orWhereHas('kecamatan', function ($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%");
+                });
         }
 
         if ($request->filled('tingkat_urgensi') && $request->tingkat_urgensi !== 'all') {

@@ -21,9 +21,32 @@ class LaporanBencanaController extends Controller
     {
         $laporan = LaporanBencana::with(['kecamatan', 'media'])
             ->where('user_id', $request->user()->id)
-            ->where('is_draft', false)
             ->orderByDesc('dibuat_pada')
             ->get();
+
+        return response()->json([
+            'status'  => 'success',
+            'data'    => $laporan,
+        ]);
+    }
+
+    /**
+     * Tampilkan detail laporan milik user yang sedang login.
+     */
+    public function show(Request $request, string $id)
+    {
+        $laporan = LaporanBencana::with([
+            'kecamatan',
+            'media',
+            'komentar' => function ($q) {
+                $q->whereNull('parent_id')
+                  ->with(['user', 'replies.user'])
+                  ->orderBy('dibuat_pada');
+            },
+        ])
+            ->where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
 
         return response()->json([
             'status'  => 'success',
@@ -169,6 +192,82 @@ class LaporanBencanaController extends Controller
     }
 
     /**
+     * Update laporan (biasanya untuk melanjutkan draft).
+     */
+    public function update(Request $request, string $id)
+    {
+        $laporan = LaporanBencana::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        $validator = Validator::make($request->all(), [
+            'jenis_bencana'  => 'required|string|max:100',
+            'deskripsi'      => 'required|string',
+            'alamat_lengkap' => 'nullable|string|max:255',
+            'kecamatan_id'   => 'nullable|exists:kecamatan,id',
+            'latitude'       => 'nullable|numeric',
+            'longitude'      => 'nullable|numeric',
+            'is_draft'       => 'boolean',
+            'foto.*'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'video'          => 'nullable|mimes:mp4,mov,avi,mkv|max:51200',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Validasi gagal.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $laporan->update([
+            'kecamatan_id'   => $request->kecamatan_id,
+            'jenis_bencana'  => $request->jenis_bencana,
+            'deskripsi'      => $request->deskripsi,
+            'alamat_lengkap' => $request->alamat_lengkap,
+            'latitude'       => $request->latitude,
+            'longitude'      => $request->longitude,
+            'is_draft'       => $request->boolean('is_draft', false),
+        ]);
+
+        // Upload foto jika ada (bisa tambahkan atau replace, di sini kita tambahkan saja)
+        if ($request->hasFile('foto')) {
+            // Optional: Hapus foto lama jika ini adalah replace total, tapi kita anggap upload baru menambah foto
+            foreach ($request->file('foto') as $index => $file) {
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('uploads/pengaduan', $filename, 'public');
+                
+                LaporanMedia::create([
+                    'laporan_id' => $laporan->id,
+                    'url'        => $filename,
+                    'tipe'       => 'foto',
+                    'urutan'     => $index,
+                ]);
+            }
+        }
+
+        // Upload video jika ada
+        if ($request->hasFile('video')) {
+            $file = $request->file('video');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('uploads/pengaduan', $filename, 'public');
+            
+            LaporanMedia::create([
+                'laporan_id' => $laporan->id,
+                'url'        => $filename,
+                'tipe'       => 'video',
+                'urutan'     => 0,
+            ]);
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => $laporan->is_draft ? 'Draft berhasil diperbarui.' : 'Laporan berhasil dikirim.',
+            'data'    => $laporan->load('media', 'kecamatan'),
+        ]);
+    }
+
+    /**
      * Admin: Tampilkan detail laporan.
      */
     public function adminShow(string $id): JsonResponse
@@ -214,23 +313,25 @@ class LaporanBencanaController extends Controller
     public function addComment(Request $request, string $id): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'isi' => 'required|string|max:1000',
+            'isi'       => 'required|string|max:1000',
+            'parent_id' => 'nullable|exists:laporan_komentar,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validasi gagal.',
-                'errors' => $validator->errors(),
+                'errors'  => $validator->errors(),
             ], 422);
         }
 
         $laporan = LaporanBencana::findOrFail($id);
-        
+
         $komentar = LaporanKomentar::create([
-            'laporan_id' => $laporan->id,
-            'user_id'    => $request->user()->id,
-            'isi'        => $request->isi,
-            'dibuat_pada'=> now(),
+            'laporan_id'  => $laporan->id,
+            'user_id'     => $request->user()->id,
+            'parent_id'   => $request->parent_id,
+            'isi'         => $request->isi,
+            'dibuat_pada' => now(),
         ]);
 
         return response()->json([
@@ -258,19 +359,4 @@ class LaporanBencanaController extends Controller
         ]);
     }
 
-    /**
-     * Tampilkan detail laporan.
-     */
-    public function show(Request $request, string $id)
-    {
-        $laporan = LaporanBencana::with(['kecamatan', 'media', 'komentar.user'])
-            ->where('id', $id)
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
-
-        return response()->json([
-            'status' => 'success',
-            'data'   => $laporan,
-        ]);
-    }
 }
