@@ -19,15 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
+    'allowed_origins' => array_unique(array_merge([
         'http://localhost:3000',
         'http://127.0.0.1:3000',
-        'http://192.168.1.7:3000',
-        'http://192.168.0.194:3000',
-        'http://192.168.100.72:3000',
-        'http://192.168.1.104:3000',
-        'http://10.10.182.20:3000',
-    ],
+    ], array_filter(explode(',', env('FRONTEND_URL', ''))))),
 
     'allowed_origins_patterns' => [],
 

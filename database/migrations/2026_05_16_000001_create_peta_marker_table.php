@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('label')->nullable();
             $table->string('kategori', 100);
             $table->enum('tingkat_bahaya', ['rendah', 'sedang', 'tinggi', 'kritis'])->default('sedang');
+            $table->integer('radius')->nullable()->comment('Radius area terdampak dalam meter');
             $table->uuid('dibuat_oleh')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamp('dibuat_pada')->nullable()->useCurrent();

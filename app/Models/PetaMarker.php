@@ -23,6 +23,7 @@ class PetaMarker extends Model
         'label',
         'kategori',
         'tingkat_bahaya',
+        'radius',
         'dibuat_oleh',
         'is_active',
     ];
@@ -32,6 +33,7 @@ class PetaMarker extends Model
         return [
             'latitude'    => 'float',
             'longitude'   => 'float',
+            'radius'      => 'integer',
             'path_data'   => 'array',
             'is_active'   => 'boolean',
             'dibuat_pada' => 'datetime',

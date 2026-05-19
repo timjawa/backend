@@ -35,6 +35,7 @@ class PetaMarkerController extends Controller
                 'label'          => $m->label ?? $m->kategori,
                 'kategori'       => strtoupper($m->kategori),
                 'tingkat_bahaya' => $m->tingkat_bahaya ?? 'sedang',
+                'radius'         => $m->radius ? (int) $m->radius : null,
                 'dibuat_pada'    => $m->dibuat_pada ? $m->dibuat_pada->toIso8601String() : null,
                 'source'         => 'manual',
             ];
@@ -142,6 +143,7 @@ class PetaMarkerController extends Controller
             'label'          => 'nullable|string|max:255',
             'kategori'       => 'required|string|max:100',
             'tingkat_bahaya' => 'required|in:rendah,sedang,tinggi,kritis',
+            'radius'         => 'nullable|integer|min:0',
             'is_active'      => 'nullable|boolean',
         ]);
 
@@ -158,6 +160,7 @@ class PetaMarkerController extends Controller
             'label'          => $request->label,
             'kategori'       => strtoupper($request->kategori),
             'tingkat_bahaya' => $request->tingkat_bahaya,
+            'radius'         => $request->radius,
             'dibuat_oleh'    => $request->user()?->id,
             'is_active'      => $request->boolean('is_active', true),
         ]);
@@ -197,6 +200,7 @@ class PetaMarkerController extends Controller
                 'label'          => $m->label ?? $m->kategori,
                 'kategori'       => strtoupper($m->kategori),
                 'tingkat_bahaya' => $m->tingkat_bahaya ?? 'sedang',
+                'radius'         => $m->radius ? (int) $m->radius : null,
                 'dibuat_pada'    => $m->dibuat_pada ? $m->dibuat_pada->toIso8601String() : null,
                 'source'         => 'manual',
             ];
@@ -328,6 +332,7 @@ class PetaMarkerController extends Controller
             'label'          => 'nullable|string|max:255',
             'kategori'       => 'nullable|string|max:100',
             'tingkat_bahaya' => 'nullable|in:rendah,sedang,tinggi,kritis',
+            'radius'         => 'nullable|integer|min:0',
             'is_active'      => 'nullable|boolean',
         ]);
 
@@ -343,6 +348,7 @@ class PetaMarkerController extends Controller
             'label'          => $request->label,
             'kategori'       => $request->filled('kategori') ? strtoupper($request->kategori) : null,
             'tingkat_bahaya' => $request->tingkat_bahaya,
+            'radius'         => $request->has('radius') ? $request->radius : null,
             'is_active'      => $request->has('is_active') ? $request->boolean('is_active') : null,
         ], fn($v) => $v !== null));
 
