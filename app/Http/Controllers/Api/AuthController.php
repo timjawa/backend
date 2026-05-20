@@ -118,6 +118,9 @@ class AuthController extends Controller
                 'alamat'     => $user->alamat,
                 'no_telepon' => $user->no_telepon,
                 'foto_url'   => $user->foto_url,
+                'total_laporan' => $user->total_laporan,
+                'total_diverifikasi' => $user->total_diverifikasi,
+                'poin'       => $user->poin,
             ],
         ]);
     }
@@ -153,6 +156,9 @@ class AuthController extends Controller
                 'alamat'     => $user->alamat,
                 'no_telepon' => $user->no_telepon,
                 'foto_url'   => $user->foto_url,
+                'total_laporan' => $user->total_laporan,
+                'total_diverifikasi' => $user->total_diverifikasi,
+                'poin'       => $user->poin,
             ],
         ]);
     }
@@ -238,6 +244,9 @@ class AuthController extends Controller
                 'alamat'     => $user->alamat,
                 'no_telepon' => $user->no_telepon,
                 'foto_url'   => $user->foto_url,
+                'total_laporan' => $user->total_laporan,
+                'total_diverifikasi' => $user->total_diverifikasi,
+                'poin'       => $user->poin,
             ]
         ]);
     }
@@ -295,6 +304,9 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role'  => $user->role,
                 'foto_url' => $user->foto_url,
+                'total_laporan' => $user->total_laporan,
+                'total_diverifikasi' => $user->total_diverifikasi,
+                'poin'       => $user->poin,
             ],
         ]);
     }

@@ -120,14 +120,14 @@ class User extends Authenticatable
     protected function totalDiverifikasi(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->laporanBencana()->whereIn('status', ['selesai', 'terverifikasi'])->count()
+            get: fn() => $this->laporanBencana()->whereIn('status', ['selesai', 'diverifikasi'])->count()
         );
     }
 
     protected function poin(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->laporanBencana()->count() * 100 // Contoh: 1 laporan = 100 poin
+            get: fn() => \Illuminate\Support\Facades\DB::table('user_points')->where('user_id', $this->id)->value('total_points') ?? 0
         );
     }
 }
