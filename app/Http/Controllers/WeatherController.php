@@ -235,7 +235,7 @@ class WeatherController extends Controller
     private function fetchOpenWeather()
     {
         $kecamatans = Kecamatan::all();
-        $apiKey = env('OPENWEATHER_API_KEY');
+        $apiKey = config('services.openweather.key');
 
         if (!$apiKey) {
             return;
@@ -268,6 +268,7 @@ class WeatherController extends Controller
                     'suhu' => $data['main']['temp'] ?? null,
                     'feels_like' => $data['main']['feels_like'] ?? null,
                     'kelembapan' => $data['main']['humidity'] ?? null,
+                    'curah_hujan' => $data['rain']['1h'] ?? $data['rain']['3h'] ?? null,
                     'cloud_cover' => $data['clouds']['all'] ?? null,
                     'kecepatan_angin' => $data['wind']['speed'] ?? null,
                     'arah_angin' => $data['wind']['deg'] ?? null,
