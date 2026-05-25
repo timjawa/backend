@@ -220,7 +220,9 @@ class LaporanBencanaController extends Controller
             ], 422);
         }
 
-        $laporan->update([
+        $isSubmittingDraft = $laporan->is_draft && !$request->boolean('is_draft', false);
+
+        $updateData = [
             'kecamatan_id'   => $request->kecamatan_id,
             'jenis_bencana'  => $request->jenis_bencana,
             'deskripsi'      => $request->deskripsi,
@@ -228,7 +230,13 @@ class LaporanBencanaController extends Controller
             'latitude'       => $request->latitude,
             'longitude'      => $request->longitude,
             'is_draft'       => $request->boolean('is_draft', false),
-        ]);
+        ];
+
+        if ($isSubmittingDraft) {
+            $updateData['dibuat_pada'] = now();
+        }
+
+        $laporan->update($updateData);
 
         // Upload foto jika ada (bisa tambahkan atau replace, di sini kita tambahkan saja)
         if ($request->hasFile('foto')) {

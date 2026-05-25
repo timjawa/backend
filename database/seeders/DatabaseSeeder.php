@@ -217,8 +217,8 @@ class DatabaseSeeder extends Seeder
                 'urutan' => 1
             ],
             [
-                'pertanyaan' => 'Bagaimana cara melaporkan bencana melalui aplikasi Jesi?',
-                'jawaban' => 'Untuk melaporkan bencana, pengguna dapat membuka aplikasi Jesi kemudian memilih menu Pengaduan Bencana. Setelah itu isi informasi yang diminta seperti lokasi, jenis bencana, dan deskripsi kejadian, lalu kirim laporan agar dapat ditindaklanjuti oleh petugas.',
+                'pertanyaan' => 'Bagaimana cara melaporkan bencana melalui aplikasi JESI?',
+                'jawaban' => 'Untuk melaporkan bencana melalui aplikasi JESI, kamu bisa membuka aplikasi JESI kemudian memilih menu Pengaduan Bencana/Lapor. Setelah itu, isi informasi yang diminta seperti lokasi, jenis bencana, dan deskripsi kejadian, lalu kirim laporan agar dapat ditindaklanjuti oleh petugas. 📱💡',
                 'kategori' => 'laporan',
                 'urutan' => 2
             ],
