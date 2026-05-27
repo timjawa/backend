@@ -31,7 +31,78 @@ class LaporanBencanaController extends Controller
     }
 
     /**
-     * Tampilkan detail laporan milik user yang sedang login.
+     * Tampilkan feed publik laporan komunitas (sudah diverifikasi).
+     */
+    public function publicFeed(Request $request): JsonResponse
+    {
+        $perPage = min((int) $request->input('per_page', 10), 20);
+
+        $laporan = LaporanBencana::with(['user', 'kecamatan', 'media', 'komentar'])
+            ->where('is_draft', false)
+            ->orderByDesc('dibuat_pada')
+            ->paginate($perPage);
+
+        // Transform to add comment count
+        $laporan->getCollection()->transform(function ($item) {
+            $item->jumlah_komentar = $item->komentar->count();
+            unset($item->komentar);
+            return $item;
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $laporan,
+        ]);
+    }
+
+    /**
+     * Tampilkan detail laporan publik (diverifikasi) dengan komentar.
+     */
+    public function publicShow(Request $request, string $id): JsonResponse
+    {
+        $laporan = LaporanBencana::with([
+            'user',
+            'kecamatan',
+            'media',
+            'komentar' => function ($q) {
+                $q->whereNull('parent_id')
+                  ->with(['user', 'replies.user'])
+                  ->orderBy('dibuat_pada');
+            },
+        ])
+            ->where('id', $id)
+            ->where('is_draft', false)
+            ->firstOrFail();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $laporan,
+        ]);
+    }
+
+    /**
+     * Ambil laporan terbaru yang sudah layak tampil di beranda.
+     */
+    public function latestVerified(Request $request): JsonResponse
+
+    {
+        $limit = min(max((int) $request->input('limit', 4), 1), 10);
+
+        $laporan = LaporanBencana::with(['kecamatan', 'media'])
+            ->where('is_draft', false)
+            ->whereIn('status', ['diverifikasi', 'selesai'])
+            ->orderByDesc('dibuat_pada')
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $laporan,
+        ]);
+    }
+
+    /**
+     * Tampilkan detail laporan milik user, atau laporan publik yang sudah valid.
      */
     public function show(Request $request, string $id)
     {
@@ -45,7 +116,13 @@ class LaporanBencanaController extends Controller
             },
         ])
             ->where('id', $id)
-            ->where('user_id', $request->user()->id)
+            ->where(function ($query) use ($request) {
+                $query->where('user_id', $request->user()->id)
+                    ->orWhere(function ($publicQuery) {
+                        $publicQuery->where('is_draft', false)
+                            ->whereIn('status', ['diverifikasi', 'selesai']);
+                    });
+            })
             ->firstOrFail();
 
         return response()->json([
@@ -220,7 +297,9 @@ class LaporanBencanaController extends Controller
             ], 422);
         }
 
-        $laporan->update([
+        $isSubmittingDraft = $laporan->is_draft && !$request->boolean('is_draft', false);
+
+        $updateData = [
             'kecamatan_id'   => $request->kecamatan_id,
             'jenis_bencana'  => $request->jenis_bencana,
             'deskripsi'      => $request->deskripsi,
@@ -228,7 +307,13 @@ class LaporanBencanaController extends Controller
             'latitude'       => $request->latitude,
             'longitude'      => $request->longitude,
             'is_draft'       => $request->boolean('is_draft', false),
-        ]);
+        ];
+
+        if ($isSubmittingDraft) {
+            $updateData['dibuat_pada'] = now();
+        }
+
+        $laporan->update($updateData);
 
         // Upload foto jika ada (bisa tambahkan atau replace, di sini kita tambahkan saja)
         if ($request->hasFile('foto')) {

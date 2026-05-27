@@ -40,11 +40,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // =============================================
     // LAPORAN BENCANA ROUTES (User authenticated)
     // =============================================
+    Route::get('/laporan-terbaru', [LaporanBencanaController::class, 'latestVerified']);
     Route::get('/laporan',       [LaporanBencanaController::class, 'index']);
     Route::post('/laporan',      [LaporanBencanaController::class, 'store']);
     Route::get('/laporan/{id}',  [LaporanBencanaController::class, 'show']);
     Route::post('/laporan/{id}', [LaporanBencanaController::class, 'update']);
 });
+
+// =============================================
+// LAPORAN WARGA (Public feed - no auth needed)
+// =============================================
+Route::get('/laporan-warga', [LaporanBencanaController::class, 'publicFeed']);
+Route::get('/laporan-warga/{id}', [LaporanBencanaController::class, 'publicShow']);
 
 // =============================================
 // BERITA ROUTES
