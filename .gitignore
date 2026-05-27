@@ -14,8 +14,6 @@ yarn-error.log
 
 # Laravel
 bootstrap/compiled.php
-public/storage
-public/hot
 storage/*.key
 /storage/pail
 
