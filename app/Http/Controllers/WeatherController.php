@@ -21,8 +21,17 @@ class WeatherController extends Controller
     {
         $kecamatanId = $request->query('kecamatan_id');
 
-        $summaryQuery = RingkasanHistoricalCuaca::with('kecamatan:id,nama')
-            ->where('tanggal', '>=', Carbon::now()->subDays(7)->toDateString());
+        // Mengambil tanggal terbaru di tabel agar jika data lama (misal saat testing/seeding),
+        // chart tetap memunculkan data (7 hari terakhir dari data yang ada).
+        $latestDate = RingkasanHistoricalCuaca::max('tanggal');
+
+        $summaryQuery = RingkasanHistoricalCuaca::with('kecamatan:id,nama');
+
+        if ($latestDate) {
+            $summaryQuery->where('tanggal', '>=', Carbon::parse($latestDate)->subDays(7)->toDateString());
+        } else {
+            $summaryQuery->where('tanggal', '>=', Carbon::now()->subDays(7)->toDateString());
+        }
 
         if ($kecamatanId) {
             $summaryQuery->where('kecamatan_id', $kecamatanId);
@@ -31,7 +40,7 @@ class WeatherController extends Controller
         $summaries = $summaryQuery->orderBy('tanggal', 'asc')->get();
 
         $result = [];
-        foreach ($summaries->groupBy(fn ($item) => $item->kecamatan->nama ?? 'Unknown') as $kecamatan => $records) {
+        foreach ($summaries->groupBy(fn ($item) => $item->kecamatan?->nama ?? 'Unknown') as $kecamatan => $records) {
             $result[$kecamatan] = $records->map(fn ($record) => [
                 'tanggal' => Carbon::parse($record->tanggal)->format('Y-m-d'),
                 'suhu_avg' => (float) $record->suhu_rata,
@@ -60,7 +69,7 @@ class WeatherController extends Controller
                 ->orderBy('waktu_lokal')
                 ->get();
 
-            $grouped = $data->groupBy(fn($item) => $item->kecamatan->nama ?? 'Unknown');
+            $grouped = $data->groupBy(fn($item) => $item->kecamatan?->nama ?? 'Unknown');
 
             return response()->json([
                 'status' => 'success',
@@ -76,7 +85,7 @@ class WeatherController extends Controller
 
             if ($summaries->isNotEmpty()) {
                 $summaryGrouped = [];
-                foreach ($summaries->groupBy(fn ($item) => $item->kecamatan->nama ?? 'Unknown') as $kecName => $records) {
+                foreach ($summaries->groupBy(fn ($item) => $item->kecamatan?->nama ?? 'Unknown') as $kecName => $records) {
                     $summaryGrouped[$kecName] = $records->map(function ($record) {
                         $cloudCover = (float) ($record->cloud_cover_rata ?? 0);
                         $curahHujan = (float) ($record->curah_hujan_rata ?? 0);
@@ -118,7 +127,7 @@ class WeatherController extends Controller
                 ->get();
 
             // Normalize to match forecast format
-            $grouped = $data->groupBy(fn($item) => $item->kecamatan->nama ?? 'Unknown');
+            $grouped = $data->groupBy(fn($item) => $item->kecamatan?->nama ?? 'Unknown');
 
             $normalizedGrouped = [];
             foreach ($grouped as $kecName => $records) {
@@ -206,7 +215,7 @@ class WeatherController extends Controller
 
         // Mengelompokkan berdasarkan kecamatan untuk kemudahan frontend
         $grouped = $data->groupBy(function($item) {
-            return $item->kecamatan->nama;
+            return $item->kecamatan?->nama ?? 'Unknown';
         });
 
         return response()->json([
