@@ -22,6 +22,7 @@ return [
     'allowed_origins' => array_unique(array_merge([
         'http://localhost:3000',
         'http://127.0.0.1:3000',
+        'https://jembersiaga.my.id'
     ], array_filter(explode(',', env('FRONTEND_URL', ''))))),
 
     'allowed_origins_patterns' => [],

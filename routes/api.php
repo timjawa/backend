@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\KontakDaruratController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\FloodPredictionController;
 use App\Http\Controllers\Api\LaporanBencanaController;
+use App\Http\Controllers\Api\MobileCuacaController;
 use App\Http\Controllers\Api\PenggunaController;
 use Illuminate\Support\Facades\Route;
 
@@ -181,6 +182,7 @@ Route::get('/weather/realtime', [\App\Http\Controllers\WeatherController::class,
 Route::get('/weather/forecast', [\App\Http\Controllers\WeatherController::class, 'getForecast']);
 Route::get('/weather/historical', [\App\Http\Controllers\WeatherController::class, 'getHistorical']);
 Route::get('/weather/by-date', [\App\Http\Controllers\WeatherController::class, 'getWeatherByDate']);
+Route::get('/mobile/cuaca', [MobileCuacaController::class, 'index']);
 Route::get('/prediksi-banjir/realtime', [FloodPredictionController::class, 'realtime']);
 
 // Admin only: refresh weather
