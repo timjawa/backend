@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminDonasiController;
 use App\Http\Controllers\Api\BeritaController;
+use App\Http\Controllers\Api\DonasiController;
 use App\Http\Controllers\Api\KecamatanController;
 use App\Http\Controllers\Api\KontakDaruratController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\FloodPredictionController;
 use App\Http\Controllers\Api\LaporanBencanaController;
+use App\Http\Controllers\Api\MobileCuacaController;
 use App\Http\Controllers\Api\PenggunaController;
 use Illuminate\Support\Facades\Route;
 
@@ -181,6 +184,7 @@ Route::get('/weather/realtime', [\App\Http\Controllers\WeatherController::class,
 Route::get('/weather/forecast', [\App\Http\Controllers\WeatherController::class, 'getForecast']);
 Route::get('/weather/historical', [\App\Http\Controllers\WeatherController::class, 'getHistorical']);
 Route::get('/weather/by-date', [\App\Http\Controllers\WeatherController::class, 'getWeatherByDate']);
+Route::get('/mobile/cuaca', [MobileCuacaController::class, 'index']);
 Route::get('/prediksi-banjir/realtime', [FloodPredictionController::class, 'realtime']);
 
 // Admin only: refresh weather
@@ -193,6 +197,39 @@ Route::middleware(['auth:sanctum', 'isAdmin'])->group(function () {
 // FIREBASE AUTH ROUTES (Public)
 // =============================================
 Route::post('/auth/firebase', [\App\Http\Controllers\Api\AuthFirebaseController::class, 'verifyFirebase']);
+
+// =============================================
+// DONASI BENCANA ROUTES
+// =============================================
+Route::get('/kampanye-donasi', [DonasiController::class, 'kampanyeIndex']);
+Route::get('/kampanye-donasi/{id}', [DonasiController::class, 'kampanyeShow']);
+Route::post('/midtrans/notification', [DonasiController::class, 'midtransNotification']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/donasi', [DonasiController::class, 'store']);
+    Route::get('/donasi/riwayat', [DonasiController::class, 'riwayat']);
+    Route::get('/donasi/riwayat/{id}', [DonasiController::class, 'riwayatShow']);
+});
+
+Route::middleware(['auth:sanctum', 'isAdmin'])->prefix('admin/donasi')->group(function () {
+    Route::get('/kampanye', [AdminDonasiController::class, 'kampanyeIndex']);
+    Route::get('/kampanye/stats', [AdminDonasiController::class, 'kampanyeStats']);
+    Route::post('/kampanye', [AdminDonasiController::class, 'kampanyeStore']);
+    Route::get('/kampanye/{id}', [AdminDonasiController::class, 'kampanyeShow']);
+    Route::post('/kampanye/{id}', [AdminDonasiController::class, 'kampanyeUpdate']);
+    Route::put('/kampanye/{id}', [AdminDonasiController::class, 'kampanyeUpdate']);
+
+    Route::get('/transaksi', [AdminDonasiController::class, 'transaksiIndex']);
+    Route::get('/transaksi/{id}', [AdminDonasiController::class, 'transaksiShow']);
+
+    Route::get('/penyaluran', [AdminDonasiController::class, 'penyaluranIndex']);
+    Route::post('/penyaluran', [AdminDonasiController::class, 'penyaluranStore']);
+    Route::get('/penyaluran/{id}', [AdminDonasiController::class, 'penyaluranShow']);
+    Route::post('/penyaluran/{id}', [AdminDonasiController::class, 'penyaluranUpdate']);
+    Route::put('/penyaluran/{id}', [AdminDonasiController::class, 'penyaluranUpdate']);
+
+    Route::get('/notifikasi-midtrans', [AdminDonasiController::class, 'notifikasiIndex']);
+});
 
 // =============================================
 // PETA MARKER ROUTES
