@@ -28,9 +28,9 @@ class WeatherController extends Controller
         $summaryQuery = RingkasanHistoricalCuaca::with('kecamatan:id,nama');
 
         if ($latestDate) {
-            $summaryQuery->where('tanggal', '>=', Carbon::parse($latestDate)->subDays(7)->toDateString());
+            $summaryQuery->where('tanggal', '>=', Carbon::parse($latestDate)->subDays(6)->toDateString());
         } else {
-            $summaryQuery->where('tanggal', '>=', Carbon::now()->subDays(7)->toDateString());
+            $summaryQuery->where('tanggal', '>=', Carbon::now()->subDays(6)->toDateString());
         }
 
         if ($kecamatanId) {
@@ -190,12 +190,20 @@ class WeatherController extends Controller
         // Force fetch from API and archive old data
         $this->fetchOpenWeather();
 
+        // Otomatis jalankan ringkasan historical cuaca agar chart di frontend langsung ter-update
+        try {
+            DB::statement('CALL ringkas_historical_cuaca_lama()');
+        } catch (\Exception $e) {
+            // Log warning jika gagal, tetapi tetap izinkan refresh realtime selesai
+            logger()->warning('Gagal merangkum data historis saat refresh realtime: ' . $e->getMessage());
+        }
+
         // Ambil data terbaru yang baru di-fetch
         $data = CuacaRealtime::with('kecamatan:id,nama')->get();
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Data cuaca berhasil diperbarui secara manual dan data lama telah diarsipkan.',
+            'message' => 'Data cuaca berhasil diperbarui secara manual dan data lama telah diarsipkan serta dirangkum.',
             'data' => $data
         ]);
     }
@@ -277,12 +285,13 @@ class WeatherController extends Controller
                     'suhu' => $data['main']['temp'] ?? null,
                     'feels_like' => $data['main']['feels_like'] ?? null,
                     'kelembapan' => $data['main']['humidity'] ?? null,
-                    'curah_hujan' => $data['rain']['1h'] ?? $data['rain']['3h'] ?? null,
+                    'curah_hujan' => $data['rain']['1h'] ?? $data['rain']['3h'] ?? 0,
                     'cloud_cover' => $data['clouds']['all'] ?? null,
                     'kecepatan_angin' => $data['wind']['speed'] ?? null,
                     'arah_angin' => $data['wind']['deg'] ?? null,
                     'weather_code' => $data['weather'][0]['id'] ?? null,
                     'deskripsi' => $data['weather'][0]['description'] ?? null,
+                    'uv_index' => 0,
                     'visibilitas' => $data['visibility'] ?? null,
                     'tekanan_udara' => $data['main']['pressure'] ?? null,
                     'fetched_at' => $now,
