@@ -69,6 +69,21 @@ class MobileCuacaController extends Controller
             }
         }
 
+        if ($request->filled('locality')) {
+            $locality = strtolower($request->query('locality'));
+            $locality = str_replace(['kecamatan ', 'kec. '], '', $locality);
+            $locality = explode(',', $locality)[0];
+            $locality = trim($locality);
+
+            $selected = $kecamatans->first(function ($k) use ($locality) {
+                $nama = strtolower($k->nama);
+                return str_contains($nama, $locality) || str_contains($locality, $nama);
+            });
+            if ($selected) {
+                return $selected;
+            }
+        }
+
         if ($request->filled('lat') && $request->filled('lng')) {
             $lat = (float) $request->query('lat');
             $lng = (float) $request->query('lng');
@@ -159,7 +174,7 @@ class MobileCuacaController extends Controller
             ->sortBy('waktu_lokal')
             ->values();
 
-        if ($forecast->count() < 3) {
+        if ($forecast->count() < $limit) {
             $existingIds = $forecast->pluck('id')->all();
             $fallback = $records
                 ->filter(fn ($weather) => $weather->waktu_lokal >= $now && !in_array($weather->id, $existingIds, true))
