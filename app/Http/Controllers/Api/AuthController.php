@@ -147,18 +147,25 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
+        // Cek apakah user punya local password (bukan Google-only)
+        $hasLocalPassword = UserAuth::where('user_id', $user->id)
+            ->where('provider', 'local')
+            ->exists();
+
         return response()->json([
             'user' => [
-                'id'         => $user->id,
-                'name'       => $user->name,
-                'email'      => $user->email,
-                'role'       => $user->role,
-                'alamat'     => $user->alamat,
-                'no_telepon' => $user->no_telepon,
-                'foto_url'   => $user->foto_url,
-                'total_laporan' => $user->total_laporan,
+                'id'                 => $user->id,
+                'name'               => $user->name,
+                'email'              => $user->email,
+                'role'               => $user->role,
+                'alamat'             => $user->alamat,
+                'no_telepon'         => $user->no_telepon,
+                'foto_url'           => $user->foto_url,
+                'firebase_uid'       => $user->firebase_uid,
+                'total_laporan'      => $user->total_laporan,
                 'total_diverifikasi' => $user->total_diverifikasi,
-                'poin'       => $user->poin,
+                'poin'               => $user->poin,
+                'has_local_password' => $hasLocalPassword,
             ],
         ]);
     }
@@ -372,5 +379,113 @@ class AuthController extends Controller
             'status'  => 'error',
             'message' => 'User tidak ditemukan.',
         ], 404);
+    }
+
+    /**
+     * Change password for currently authenticated user.
+     * Requires old password verification before updating.
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Cek apakah user adalah Google Sign-In (tidak punya local auth)
+        $localAuth = UserAuth::where('user_id', $user->id)
+            ->where('provider', 'local')
+            ->first();
+
+        if (!$localAuth) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Akun Anda menggunakan login Google. Ubah password melalui akun Google Anda.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'old_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'old_password.required' => 'Password lama wajib diisi.',
+            'new_password.required' => 'Password baru wajib diisi.',
+            'new_password.min'      => 'Password baru minimal 8 karakter.',
+            'new_password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+        ]);
+
+        // Verifikasi password lama
+        if (!Hash::check($validated['old_password'], $localAuth->password)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Password lama yang Anda masukkan salah.',
+            ], 422);
+        }
+
+        // Pastikan password baru berbeda dari password lama
+        if (Hash::check($validated['new_password'], $localAuth->password)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Password baru tidak boleh sama dengan password lama.',
+            ], 422);
+        }
+
+        // Update password
+        $localAuth->password = $validated['new_password'];
+        $localAuth->save();
+
+        // Revoke semua token lama dan buat token baru agar sesi tetap aktif
+        $user->tokens()->delete();
+        $newToken = $user->createToken('mobile_token')->plainTextToken;
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Password berhasil diperbarui.',
+            'token'   => $newToken,
+        ]);
+    }
+
+    /**
+     * Set password pertama kali untuk user Google Sign-In.
+     * Membuat local auth record tanpa memerlukan password lama.
+     * Hanya bisa digunakan jika user belum punya local auth.
+     */
+    public function setPassword(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Cek apakah sudah punya local auth — jika sudah, gunakan changePassword
+        $localAuth = UserAuth::where('user_id', $user->id)
+            ->where('provider', 'local')
+            ->first();
+
+        if ($localAuth) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Akun Anda sudah memiliki password. Gunakan fitur Ubah Password.',
+            ], 409);
+        }
+
+        $validated = $request->validate([
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'new_password.required'  => 'Password baru wajib diisi.',
+            'new_password.min'       => 'Password baru minimal 8 karakter.',
+            'new_password.confirmed' => 'Konfirmasi password tidak cocok.',
+        ]);
+
+        // Buat local auth baru untuk user Google ini
+        UserAuth::create([
+            'user_id'  => $user->id,
+            'provider' => 'local',
+            'password' => $validated['new_password'],
+        ]);
+
+        // Rotasi token untuk keamanan
+        $user->tokens()->delete();
+        $newToken = $user->createToken('mobile_token')->plainTextToken;
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Password berhasil ditambahkan. Anda kini bisa login dengan email & password.',
+            'token'   => $newToken,
+        ]);
     }
 }
